@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
+    <title>张轩儒的博客</title>
+    <url>/2022/03/15/hello-world/</url>
+    <content><![CDATA[<p>欢迎来到我的博客</p>
+]]></content>
+  </entry>
+  <entry>
     <title>My New Post</title>
     <url>/2022/03/15/My-New-Post/</url>
     <content><![CDATA[<p>欢迎欢迎</p>
@@ -10,9 +16,11 @@
       </tags>
   </entry>
   <entry>
-    <title>张轩儒的博客</title>
-    <url>/2022/03/15/hello-world/</url>
-    <content><![CDATA[<p>欢迎来到我的博客</p>
+    <title>张轩儒作业</title>
+    <url>/2022/03/24/%E5%BC%A0%E8%BD%A9%E5%84%92%E4%BD%9C%E4%B8%9A/</url>
+    <content><![CDATA[<p>###Less-1(第一关)<br>首先输入正确的url<br><img src="/images/01.png"><br>看图能够知道本关的查询结果是会回显的<br>然后加上单引号，看下图</p>
+<span id="more"></span>
+<p><img src="/images/1.png"><br>可以发现这关如果输入不符合sql语法是会在页面上返回报错信息的，根据这个就可以明确知道需要闭合什么符号，比如这关是闭合单引号<br>下面两步找列数,具体看图片操作<br><img src="/images/4.png"><br><img src="/images/3.png"><br>确定哪个字段有回显<br><img src="/images/5.png"><br>确定当前数据库<br><img src="/images/6.png"><br>爆出当前数据库内的所有表名<br><img src="/images/7.png"><br>爆出当前数据库user表的所有列名<br><img src="/images/8.png"><br>爆出当前数据库user表所有username和password<br><img src="/images/9.png"><br>###Less-2(第二关)<br>首先输入正确的url<br><img src="/images/10.png"><br>能够知道本关的查询结果是会回显的<br>然后输入’<br>可以发现这关如果输入不符合sql语法是会在页面上返回报错信息的，根据这个就可以明确知道需要闭合什么符号，比如这关不用闭合<br><img src="/images/11.png"><br>这关使用union注入,看下图<br>下面两步找列数<br><img src="/images/12.png"><br><img src="/images/13.png"><br>确定哪个字段有回显<br><img src="/images/14.png"><br>确定当前数据库<br><img src="/images/15.png"><br>爆出当前数据库内的所有表名<br><img src="/images/16.png"><br>爆出当前数据库user表的所有列名<br><img src="/images/17.png"><br>爆出当前数据库user表所有username和password<br>看图第二关通关<br><img src="/images/18.png"><br>###Less-3(第三关)<br>首先输入正确的url<br><img src="/images/20.png"><br>能够知道本关的查询结果是会回显的<br>然后加上’可以发现这关如果输入不符合sql语法是会在页面上返回报错信息的，根据这个就可以明确知道需要闭合什么符号，比如这关闭合是’)看下图<br><img src="/images/21.png"><br>这关使用union注入<br>下面两步找列数<br><img src="/images/22.png"><br><img src="/images/23.png"><br>确定哪个字段有回显<br><img src="/images/24.png"><br>确定当前数据库<br><img src="/images/25.png"><br>爆出当前数据库内的所有表名<br><img src="/images/26.png"><br>爆出当前数据库user表的所有列名<br><img src="/images/27.png"><br>爆出当前数据库user表所有username和password<br><img src="/images/28.png"><br>第三关通关</p>
 ]]></content>
   </entry>
   <entry>
@@ -167,6 +175,26 @@
 ]]></content>
   </entry>
   <entry>
+    <title>文件包含漏洞</title>
+    <url>/2022/04/22/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB%E6%BC%8F%E6%B4%9E/</url>
+    <content><![CDATA[<p>简介<br>文件包含，是一个功能。在各种开发语言中都提供了内置的文件包含函数，可以使开发人员在一个代码文件中直接包含（引入）另外一个代码文件。</p>
+<span id="more"></span>
+<p>类型<br>根据不同的配置环境，文件包含漏洞分为如下两种情况：<br>1.本地文件包含漏洞（LFI）：仅能够对服务器本地的文件进行包含，由于服务器上的文件并不是攻击者所能够控制的，因此该情况下，攻击者更多的会包含一些固定的系统配置文件，从而读取系统敏感信息。很多时候本地文件包含漏洞会结合一些特殊的文件上传漏洞，从而形成更大的威力。<br>2.远程文件包含漏洞（RFI）：能够通过url地址对远程的文件进行包含，这意味着攻击者可以传入任意的代码，这种情况很严重。</p>
+<p>原理<br>以PHP为例，在PHP中，提供了以下文件包含函数：</p>
+<p>include:找不到文件产生警告，脚本继续运行。<br>include_once：相对于include，文件被包含后不会再次被包含。<br>require：找不到文件，产生致命错误，脚本停止。<br>require_once：相对于require，文件被包含后不会再次被包含。<br>这些函数在代码设计中被经常使用到。大多数情况下，文件包含函数中包含的代码文件是固定的，因此也不会出现安全问题。 但是，有些时候，文件包含的代码文件被写成了一个变量，且这个变量可以由前端用户传进来，这种情况下，如果没有做足够的安全考虑，则可能会引发文件包含漏洞。攻击者会指定一个“意想不到”的文件让包含函数去执行，从而造成恶意操作。</p>
+<p>攻击<br>使用靶机：pikachu</p>
+<p>FileInclusion(local)<br>我们选择一个NBA player，可以看到url，filename参数可以修改。</p>
+<p>Windows敏感文件</p>
+<p>Windows敏感文件<br>文件路径    文件作用<br>c:\boot.ini                                       查看系统版本<br>c:\Windows\system32\inetsrvMetaBase.xml    IIS配置文件<br>c:\Windows\php.ini                                       php配置信息<br>c:\Windows\my.ini         mysql配置文件，记录管理员登陆过的MYSQL用户名和密码<br>c:\Windows\system.ini                                  winnt的php配置信息<br>c:\Windows\win.ini                                         winnt的mysql配置文件<br>c:\mysql\data\mysql\user.MYD                   mysql.user表中的数据库连接密码<br>c:\Program Files\RhinoSoft.com\Serv-U\ServUDaemon.ini    存储了虚拟主机网站路径和密码<br>c:\windows\system32\inetsrv\MetaBase.xml    查看IIS的虚拟主机配置<br>c:\windows\repair\sam    WINDOWS系统初次安装的密码<br>c:\Program Files\ Serv-U\ServUAdmin.exe    6.0版本以前的serv-u管理员密码<br>c:\Program Files\RhinoSoft.com\ServUDaemon.exe<br>C:\Documents and Settings\All Users\Application Data\Symantec\pcAnywhere*.cif文件     存储了pcAnywhere的登陆密码<br>c:\Program Files\Apache Group\Apache\conf\httpd.conf 或C:\apache\conf\httpd.conf    查看WINDOWS系统apache文件<br>c:/Resin-3.0.14/conf/resin.conf    查看jsp开发的网站resin文件配置信息.<br>c:/Resin/conf/resin.conf /usr/local/resin/conf/resin.conf    查看linux系统配置的JSP虚拟主机<br>d:\APACHE\Apache2\conf\httpd.conf<br>C:\mysql\data\mysql\user.MYD    存在MYSQL系统中的用户密码<br>C:\Windows\System32\drivers\etc\hostswinserver    配置Telnet信息</p>
+<p>测试<br>我测试了一下，发现不可以，因为它限制了include目录下，不过，我们可以使用../来到磁盘下的任意目录。</p>
+<p>../切换目录<br>结合文件上传漏洞在../../unsafeupload/uploads/下的上传的文件，可以实现php代码的运行。</p>
+<p>仅本地文件包含<br>仅本地文件包含时，</p>
+<p>可以查看本地敏感文件，如/etc/passwd等</p>
+<p>可以包含日志文件，通过其他手段写到日志文件，如WAF日志，ssh登录日志</p>
+<p>防御<br>文件包含参数写死<br>文件包含参数不可由用户修改<br>禁用目录跳转字符”../“<br>使用文件验证白名单</p>
+]]></content>
+  </entry>
+  <entry>
     <title>webshell</title>
     <url>/2022/04/22/webshell/</url>
     <content><![CDATA[<p>简介<br>Webshell是通过服务器开放的端口获取服务器的某些权限。</p>
@@ -177,14 +205,6 @@
 <p>小马，一般而言，我们在上传文件的时候，会被限制上传的文件大小或是拦截的情况，那么我通过小马来上传大马，实现我们想要的功能。</p>
 <p>一句话木马，短小精悍、功能强大、隐蔽性好、使用客户端可以快速管理webshell。</p>
 <p>原理<br>利用文件上传漏洞、SQL注入漏洞、RCE漏洞等，将恶意文件放到web服务器中，也就是常说的”后门”，之后可以进行文件管理、数据库管理、远程命令执行、提权等恶意操作。</p>
-]]></content>
-  </entry>
-  <entry>
-    <title>张轩儒作业</title>
-    <url>/2022/03/24/%E5%BC%A0%E8%BD%A9%E5%84%92%E4%BD%9C%E4%B8%9A/</url>
-    <content><![CDATA[<p>###Less-1(第一关)<br>首先输入正确的url<br><img src="/images/01.png"><br>看图能够知道本关的查询结果是会回显的<br>然后加上单引号，看下图</p>
-<span id="more"></span>
-<p><img src="/images/1.png"><br>可以发现这关如果输入不符合sql语法是会在页面上返回报错信息的，根据这个就可以明确知道需要闭合什么符号，比如这关是闭合单引号<br>下面两步找列数,具体看图片操作<br><img src="/images/4.png"><br><img src="/images/3.png"><br>确定哪个字段有回显<br><img src="/images/5.png"><br>确定当前数据库<br><img src="/images/6.png"><br>爆出当前数据库内的所有表名<br><img src="/images/7.png"><br>爆出当前数据库user表的所有列名<br><img src="/images/8.png"><br>爆出当前数据库user表所有username和password<br><img src="/images/9.png"><br>###Less-2(第二关)<br>首先输入正确的url<br><img src="/images/10.png"><br>能够知道本关的查询结果是会回显的<br>然后输入’<br>可以发现这关如果输入不符合sql语法是会在页面上返回报错信息的，根据这个就可以明确知道需要闭合什么符号，比如这关不用闭合<br><img src="/images/11.png"><br>这关使用union注入,看下图<br>下面两步找列数<br><img src="/images/12.png"><br><img src="/images/13.png"><br>确定哪个字段有回显<br><img src="/images/14.png"><br>确定当前数据库<br><img src="/images/15.png"><br>爆出当前数据库内的所有表名<br><img src="/images/16.png"><br>爆出当前数据库user表的所有列名<br><img src="/images/17.png"><br>爆出当前数据库user表所有username和password<br>看图第二关通关<br><img src="/images/18.png"><br>###Less-3(第三关)<br>首先输入正确的url<br><img src="/images/20.png"><br>能够知道本关的查询结果是会回显的<br>然后加上’可以发现这关如果输入不符合sql语法是会在页面上返回报错信息的，根据这个就可以明确知道需要闭合什么符号，比如这关闭合是’)看下图<br><img src="/images/21.png"><br>这关使用union注入<br>下面两步找列数<br><img src="/images/22.png"><br><img src="/images/23.png"><br>确定哪个字段有回显<br><img src="/images/24.png"><br>确定当前数据库<br><img src="/images/25.png"><br>爆出当前数据库内的所有表名<br><img src="/images/26.png"><br>爆出当前数据库user表的所有列名<br><img src="/images/27.png"><br>爆出当前数据库user表所有username和password<br><img src="/images/28.png"><br>第三关通关</p>
 ]]></content>
   </entry>
   <entry>
@@ -453,26 +473,6 @@ OWASP XSS过滤备忘单：Redirecting…
 <p>后缀白名单，MIME类型判断结合</p>
 <p>2.文件重命名</p>
 <p>3.文件上传目录设置为不可执行</p>
-]]></content>
-  </entry>
-  <entry>
-    <title>文件包含漏洞</title>
-    <url>/2022/04/22/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB%E6%BC%8F%E6%B4%9E/</url>
-    <content><![CDATA[<p>简介<br>文件包含，是一个功能。在各种开发语言中都提供了内置的文件包含函数，可以使开发人员在一个代码文件中直接包含（引入）另外一个代码文件。</p>
-<span id="more"></span>
-<p>类型<br>根据不同的配置环境，文件包含漏洞分为如下两种情况：<br>1.本地文件包含漏洞（LFI）：仅能够对服务器本地的文件进行包含，由于服务器上的文件并不是攻击者所能够控制的，因此该情况下，攻击者更多的会包含一些固定的系统配置文件，从而读取系统敏感信息。很多时候本地文件包含漏洞会结合一些特殊的文件上传漏洞，从而形成更大的威力。<br>2.远程文件包含漏洞（RFI）：能够通过url地址对远程的文件进行包含，这意味着攻击者可以传入任意的代码，这种情况很严重。</p>
-<p>原理<br>以PHP为例，在PHP中，提供了以下文件包含函数：</p>
-<p>include:找不到文件产生警告，脚本继续运行。<br>include_once：相对于include，文件被包含后不会再次被包含。<br>require：找不到文件，产生致命错误，脚本停止。<br>require_once：相对于require，文件被包含后不会再次被包含。<br>这些函数在代码设计中被经常使用到。大多数情况下，文件包含函数中包含的代码文件是固定的，因此也不会出现安全问题。 但是，有些时候，文件包含的代码文件被写成了一个变量，且这个变量可以由前端用户传进来，这种情况下，如果没有做足够的安全考虑，则可能会引发文件包含漏洞。攻击者会指定一个“意想不到”的文件让包含函数去执行，从而造成恶意操作。</p>
-<p>攻击<br>使用靶机：pikachu</p>
-<p>FileInclusion(local)<br>我们选择一个NBA player，可以看到url，filename参数可以修改。</p>
-<p>Windows敏感文件</p>
-<p>Windows敏感文件<br>文件路径    文件作用<br>c:\boot.ini                                       查看系统版本<br>c:\Windows\system32\inetsrvMetaBase.xml    IIS配置文件<br>c:\Windows\php.ini                                       php配置信息<br>c:\Windows\my.ini         mysql配置文件，记录管理员登陆过的MYSQL用户名和密码<br>c:\Windows\system.ini                                  winnt的php配置信息<br>c:\Windows\win.ini                                         winnt的mysql配置文件<br>c:\mysql\data\mysql\user.MYD                   mysql.user表中的数据库连接密码<br>c:\Program Files\RhinoSoft.com\Serv-U\ServUDaemon.ini    存储了虚拟主机网站路径和密码<br>c:\windows\system32\inetsrv\MetaBase.xml    查看IIS的虚拟主机配置<br>c:\windows\repair\sam    WINDOWS系统初次安装的密码<br>c:\Program Files\ Serv-U\ServUAdmin.exe    6.0版本以前的serv-u管理员密码<br>c:\Program Files\RhinoSoft.com\ServUDaemon.exe<br>C:\Documents and Settings\All Users\Application Data\Symantec\pcAnywhere*.cif文件     存储了pcAnywhere的登陆密码<br>c:\Program Files\Apache Group\Apache\conf\httpd.conf 或C:\apache\conf\httpd.conf    查看WINDOWS系统apache文件<br>c:/Resin-3.0.14/conf/resin.conf    查看jsp开发的网站resin文件配置信息.<br>c:/Resin/conf/resin.conf /usr/local/resin/conf/resin.conf    查看linux系统配置的JSP虚拟主机<br>d:\APACHE\Apache2\conf\httpd.conf<br>C:\mysql\data\mysql\user.MYD    存在MYSQL系统中的用户密码<br>C:\Windows\System32\drivers\etc\hostswinserver    配置Telnet信息</p>
-<p>测试<br>我测试了一下，发现不可以，因为它限制了include目录下，不过，我们可以使用../来到磁盘下的任意目录。</p>
-<p>../切换目录<br>结合文件上传漏洞在../../unsafeupload/uploads/下的上传的文件，可以实现php代码的运行。</p>
-<p>仅本地文件包含<br>仅本地文件包含时，</p>
-<p>可以查看本地敏感文件，如/etc/passwd等</p>
-<p>可以包含日志文件，通过其他手段写到日志文件，如WAF日志，ssh登录日志</p>
-<p>防御<br>文件包含参数写死<br>文件包含参数不可由用户修改<br>禁用目录跳转字符”../“<br>使用文件验证白名单</p>
 ]]></content>
   </entry>
 </search>
