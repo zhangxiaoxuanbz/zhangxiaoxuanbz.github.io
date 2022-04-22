@@ -20,30 +20,35 @@
     var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","Pisces | Gemini":240,"width":300,"display":"post","padding":20,"offset":12,"onmobile":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
   </script>
 
-  <meta name="description" content="活的认真，笑的放肆，忠于自己">
-<meta property="og:type" content="website">
-<meta property="og:title" content="张轩儒">
-<meta property="og:url" content="http://example.com/index.html">
+  <meta name="description" content="简介跨站脚本攻击(全称Cross Site Scripting,为和CSS（层叠样式表）区分，简称为XSS)是指恶意攻击者在Web页面中插入恶意javascript代码（也可能包含html代码），当用户浏览网页之时，嵌入其中Web里面的javascript代码会被执行，从而达到恶意攻击用户的目的。XSS是攻击客户端，最终受害者是用户，当然，网站管理员也是用户之一。XSS漏洞通常是通过php的输出函">
+<meta property="og:type" content="article">
+<meta property="og:title" content="xss攻击">
+<meta property="og:url" content="http://example.com/2022/04/22/xss%E6%94%BB%E5%87%BB/index.html">
 <meta property="og:site_name" content="张轩儒">
-<meta property="og:description" content="活的认真，笑的放肆，忠于自己">
+<meta property="og:description" content="简介跨站脚本攻击(全称Cross Site Scripting,为和CSS（层叠样式表）区分，简称为XSS)是指恶意攻击者在Web页面中插入恶意javascript代码（也可能包含html代码），当用户浏览网页之时，嵌入其中Web里面的javascript代码会被执行，从而达到恶意攻击用户的目的。XSS是攻击客户端，最终受害者是用户，当然，网站管理员也是用户之一。XSS漏洞通常是通过php的输出函">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="javascript:javascript:alert(1)">
+<meta property="og:image" content="http://example.com/2022/04/22/xss%E6%94%BB%E5%87%BB/asdasd%3C/noscript%3E%3Cimg%20src=*%20οnerrοr=prompt(1)%3E">
+<meta property="article:published_time" content="2022-04-22T00:54:13.000Z">
+<meta property="article:modified_time" content="2022-04-22T01:22:59.081Z">
 <meta property="article:author" content="zhangxiaoxuan">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="javascript:javascript:alert(1)">
 
-<link rel="canonical" href="http://example.com/">
+<link rel="canonical" href="http://example.com/2022/04/22/xss%E6%94%BB%E5%87%BB/">
 
 
 <script id="page-configurations">
   // https://hexo.io/docs/variables.html
   CONFIG.page = {
     sidebar: "",
-    isHome : true,
-    isPost : false,
+    isHome : false,
+    isPost : true,
     lang   : 'zh-CN'
   };
 </script>
 
-  <title>张轩儒</title>
+  <title>xss攻击 | 张轩儒</title>
   
 
 
@@ -129,7 +134,7 @@
   </li>
         <li class="menu-item menu-item-archives">
 
-    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">3</span></a>
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">8</span></a>
 
   </li>
       <li class="menu-item menu-item-search">
@@ -180,13 +185,14 @@
         <div class="content-wrap">
           
 
-          <div class="content index posts-expand">
+          <div class="content post posts-expand">
             
-      
+
+    
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/03/24/%E5%BC%A0%E8%BD%A9%E5%84%92%E4%BD%9C%E4%B8%9A/">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/04/22/xss%E6%94%BB%E5%87%BB/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/author.jpg">
@@ -198,10 +204,9 @@
       <meta itemprop="name" content="张轩儒">
     </span>
       <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/03/24/%E5%BC%A0%E8%BD%A9%E5%84%92%E4%BD%9C%E4%B8%9A/" class="post-title-link" itemprop="url">张轩儒作业</a>
-        </h2>
+        <h1 class="post-title" itemprop="name headline">
+          xss攻击
+        </h1>
 
         <div class="post-meta">
             <span class="post-meta-item">
@@ -209,16 +214,10 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
+              
 
-              <time title="创建时间：2022-03-24 10:14:50" itemprop="dateCreated datePublished" datetime="2022-03-24T10:14:50+08:00">2022-03-24</time>
+              <time title="创建时间：2022-04-22 08:54:13 / 修改时间：09:22:59" itemprop="dateCreated datePublished" datetime="2022-04-22T08:54:13+08:00">2022-04-22</time>
             </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-03-25 17:19:47" itemprop="dateModified" datetime="2022-03-25T17:19:47+08:00">2022-03-25</time>
-              </span>
 
           
 
@@ -231,160 +230,175 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>###Less-1(第一关)<br>首先输入正确的url<br><img src="/images/01.png"><br>看图能够知道本关的查询结果是会回显的<br>然后加上单引号，看下图</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2022/03/24/%E5%BC%A0%E8%BD%A9%E5%84%92%E4%BD%9C%E4%B8%9A/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
+        <p>简介<br>跨站脚本攻击(全称Cross Site Scripting,为和CSS（层叠样式表）区分，简称为XSS)是指恶意攻击者在Web页面中插入恶意javascript代码（也可能包含html代码），当用户浏览网页之时，嵌入其中Web里面的javascript代码会被执行，从而达到恶意攻击用户的目的。XSS是攻击客户端，最终受害者是用户，当然，网站管理员也是用户之一。<br>XSS漏洞通常是通过php的输出函数将javascript代码输出到html页面中，通过用户本地浏览器执行的，所以xss漏洞关键就是寻找参数未过滤的输出函数。</p>
+<p>php中常见的输出函数有：</p>
+<p>echo<br>printf<br>print<br>print_r<br>sprintf<br>die<br>var-dump<br>var_export<br>所用工具<br>Google出品：开源Web App漏洞测试环境：Firing Range</p>
+<p>靶机:dvwa、pikachu</p>
+<p>XSS的类型<br>反射型XSS/不持久型XSS<br>选择的是echo函数，不加过滤，直接输出</p>
+<p>input.php</p>
+<?php 
+$input = $_GET['input'];
+echo 'output:<br>'.$input;
+?><p>显示<br>可以看到我们的输入直接被输出。 那么，如果我们的参数是JavaScript代码呢？</p>
+<script>alert('xss attack by lady_killer9')<script>
+
+js代码执行
+也就是说js能够做到的事情，都可在这里插入去实现，比如跳转到钓鱼网站。
+
+ Firing Range的Html Body存在的反射型XSS
+
+
+反射性XSS攻击之html Body
+
+脚本插入
+下面是在dvwa中的展示
+
+
+插入js代码
+
+提交
+
+查看网页源代码
+存储型XSS/持久型XSS
+和反射型XSS的即时响应相比，存储型XSS则需要先把代码保存到数据库或文件中，下次读取时仍然会显示出来，利用的问题依然是没有对用户的输入进行过滤。使用靶机pikachu的存储型xss。
+
+“<script>alert(document.cookie)<script>”
+
+XSS注入
+
+注入成功
+
+注入后留言列表
+基于DOM的XSS
+基于文档对象模型(Document Object Model，DOM)的一种漏洞。客户端的脚本可以通过DOM动态地修改页面内容，它不依赖于提交数据到服务器，而是从客户端获得DOM中的数据在本地执行，如果DOM中的数据没有经过严格确认，就会产生DOM型XSS漏洞。
+
+没了解过DOM的可以看一看HTML DOM教程
+
+HTML DOM就像数据结构中的树，有根节点，叶子节点等，通过document对象进行写入。
+
+
+F12查看源代码
+使用F12查看，发现是把id为text的输入框的内容显示出来。单引号闭合即可，而且F12的时候就直接看见了。
+
+提示给的是
+
+'onclick="alert('lady_killer9')">
+我使用的是
+
+'onclick='alert('lady_killer9')
+
+注入成功
+常用Payload与工具
+XSS扫描工具
+XSStrike
+beef
+XSS Scanner Online
+XSSer
+xsscrapy
+BruteXSS Terminal
+BruteXSS GUI
+工具不在于多，学一个就可以了，我学习的是第一个网络安全-XSStrike中文手册（自学笔记）。
+
+Payloads
+script标签类
+对于没有过滤的很简单的XSS漏洞，可以使用
+
+“<script>alert(“XSS”)</script>”
+<p>有的时候会过滤掉script，大小写、双写等无法绕过，可使用后面的payload。</p>
+<p>结合js的html标签<br>可结合一些onclick、onerror等事件</p>
+<p>&lt;IMG οnmοuseοver=”alert(‘xxs’)”&gt;</p>
+<p>&lt;img src=xss οnerrοr=alert(1)&gt;</p>
+<p>伪协议<br>上面的都不行的话，可以试试伪协议</p>
+<IFRAME src="javascript:alert(1);"><IFRAME>
+
+<IMG dynsrc="javascript:javascript:alert(1)">
+
+<p>绕过<br>大小写绕过</p>
+<scRipt>alert(“XSS”)<scRipt>
+
+双写绕过
+
+<scrscriptipt>alert(“XSS”)<scrscriptipt>
+
+html编码绕过
+
+<script>alert(“XSS”)<script>
+
+等价于
+
+<script>alert("XSS")<script>
+
+<a href=javascript:alert(2)>a</a>
+
+等价于
+
+<a href=javascript:alert(2)>a</a>
+
+如果你还不了解常见编码，可查看：网络安全-WEB中的常见编码 
+
+标签优先级绕过
+
+<noscript >标签比<img>标签解析优先性更高，所以</noscript >会优先闭合，导致<img>标签逃逸，从而造成xss执行
+
+<noscript><img src="asdasd</noscript><img src=* οnerrοr=prompt(1)>"></noscript>
+
+危害
+用户的Cookie被获取，其中可能存在Session ID等敏感信息。若服务器端没有做相应防护，攻击者可用对应Cookie登陆服务器。
+攻击者能够在一定限度内记录用户的键盘输入。
+攻击者通过CSRF等方式以用户身份执行危险操作。
+XSS蠕虫。
+获取用户浏览器信息。
+利用XSS漏洞扫描用户内网。
+防御
+标签过滤
+事件过滤
+敏感字符过滤
+设置httponly防止Cookie被获取
+内容安全策略（CSP）
+在将不可信数据插入到HTML标签之间时，对这些数据进行HTML Entity编码
+在将不可信数据插入到HTML属性里时，对这些数据进行HTML属性编码
+在将不可信数据插入到SCRIPT里时，对这些数据进行SCRIPT编码
+在将不可信数据插入到Style属性里时，对这些数据进行CSS编码
+当然，如果过过滤不全，或者CSP配置错误，也可能被绕过。
+
+------------------------------------20210821补充--------------------------------------
+
+知乎-如何通过XSS获取http-only保护的Cookie
+
+在线XSS挑战：XSS平台|CTF欢迎来到XSS挑战|XSS之旅|XSS测试
+
+XSS Challenges：XSS Challenges
+
+XSS Payload：https://github.com/payloadbox/xss-payload-list
+
+OWASP XSS过滤备忘单：Redirecting…
+
+
+</scRipt></IMG></IFRAME></IFRAME>
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
         
-      
-    </div>
 
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/04/22/SQL%E6%B3%A8%E5%85%A5%E6%BC%8F%E6%B4%9E/" rel="prev" title="SQL注入漏洞">
+      <i class="fa fa-chevron-left"></i> SQL注入漏洞
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
       </footer>
+    
   </article>
   
   
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/03/15/My-New-Post/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/author.jpg">
-      <meta itemprop="name" content="zhangxiaoxuan">
-      <meta itemprop="description" content="活的认真，笑的放肆，忠于自己">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="张轩儒">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/03/15/My-New-Post/" class="post-title-link" itemprop="url">My New Post</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2022-03-15 18:18:36" itemprop="dateCreated datePublished" datetime="2022-03-15T18:18:36+08:00">2022-03-15</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-03-25 16:22:25" itemprop="dateModified" datetime="2022-03-25T16:22:25+08:00">2022-03-25</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>欢迎欢迎</p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2022/03/15/hello-world/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/author.jpg">
-      <meta itemprop="name" content="zhangxiaoxuan">
-      <meta itemprop="description" content="活的认真，笑的放肆，忠于自己">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="张轩儒">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2022/03/15/hello-world/" class="post-title-link" itemprop="url">张轩儒的博客</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2022-03-15 16:16:39" itemprop="dateCreated datePublished" datetime="2022-03-15T16:16:39+08:00">2022-03-15</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2022-03-25 16:30:44" itemprop="dateModified" datetime="2022-03-25T16:30:44+08:00">2022-03-25</time>
-              </span>
-
-          
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>欢迎来到我的博客</p>
-
-      
-    </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
-
-
   
 
 
@@ -452,7 +466,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">3</span>
+          <span class="site-state-item-count">8</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>

